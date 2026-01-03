@@ -347,16 +347,23 @@
         
         gameState.sessionId = gameState.sessionId || `session_${Date.now()}`;
         
-        await window.dataSdk.create({
-          player1_name: gameState.player1Name,
-          player2_name: gameState.player2Name,
-          current_level: gameState.currentLevel,
-          player1_total_score: gameState.player1Score,
-          player2_total_score: gameState.player2Score,
-          completed_levels: gameState.completedLevels.join(','),
-          session_id: gameState.sessionId,
-          timestamp: new Date().toISOString()
-        });
+        // Save data
+        if (window.dataSdk) {
+          const result = await window.dataSdk.create({
+            player1_name: gameState.player1Name,
+            player2_name: gameState.player2Name,
+            current_level: gameState.currentLevel,
+            player1_total_score: gameState.player1Score,
+            player2_total_score: gameState.player2Score,
+            completed_levels: gameState.completedLevels.join(','),
+            session_id: gameState.sessionId,
+            timestamp: new Date().toISOString()
+          });
+          
+          if (!result.isOk) {
+            console.error('Failed to save data');
+          }
+        }
         
         // Play victory sound after data is saved
         playSound('complete');
@@ -1065,7 +1072,11 @@
           e.target.textContent = isCorrect ? '✓ Benar!' : '✗ Salah';
           e.target.style.opacity = '0.7';
           
-          checkBothCompleted();
+          // Update UI immediately
+          updateGameplay();
+          
+          // Check if both players completed with async handling
+          await checkBothCompleted();
         }
         
         if (e.target.id === 'nextLevelBtn') {
@@ -1321,5 +1332,5 @@
 
     init();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b7ed114618ee9d5',t:'MTc2NzQwNDcyNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b7ee2a57282e9d5',t:'MTc2NzQwNTQ0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
