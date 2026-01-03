@@ -91,7 +91,7 @@
       text_color: "#f1f5f9",
       primary_action_color: "#3b82f6",
       secondary_action_color: "#10b981",
-      game_title: "Arena Pseudocode: Duel Logika",
+      game_title: "Arena Pseudocode - Duel Logika",
       game_subtitle: "Gim Edukasi Interaktif Berpikir Komputasional",
       play_button_text: "MULAI PERMAINAN",
       next_level_text: "Lanjut ke Level Berikutnya",
@@ -379,17 +379,73 @@
       const fontFamily = config.font_family || defaultConfig.font_family;
       
       return `
-        <div class="h-full flex items-center justify-center" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
-          <div class="text-center fade-in px-8">
+        <div class="h-full flex items-center justify-center relative overflow-hidden" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
+          <!-- Tech Background Pattern -->
+          <svg class="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice">
+            <!-- Circuit Board Pattern -->
+            <line x1="0" y1="100" x2="200" y2="100" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <circle cx="200" cy="100" r="5" fill="${config.primary_action_color}"/>
+            <line x1="200" y1="100" x2="200" y2="200" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <line x1="200" y1="200" x2="350" y2="200" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <circle cx="350" cy="200" r="5" fill="${config.primary_action_color}"/>
+            
+            <line x1="800" y1="150" x2="650" y2="150" stroke="${config.secondary_action_color}" stroke-width="2"/>
+            <circle cx="650" cy="150" r="5" fill="${config.secondary_action_color}"/>
+            <line x1="650" y1="150" x2="650" y2="300" stroke="${config.secondary_action_color}" stroke-width="2"/>
+            <line x1="650" y1="300" x2="500" y2="300" stroke="${config.secondary_action_color}" stroke-width="2"/>
+            <circle cx="500" cy="300" r="5" fill="${config.secondary_action_color}"/>
+            
+            <line x1="100" y1="450" x2="250" y2="450" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <circle cx="250" cy="450" r="5" fill="${config.primary_action_color}"/>
+            <line x1="250" y1="450" x2="250" y2="550" stroke="${config.primary_action_color}" stroke-width="2"/>
+            
+            <line x1="900" y1="400" x2="750" y2="400" stroke="${config.secondary_action_color}" stroke-width="2"/>
+            <circle cx="750" cy="400" r="5" fill="${config.secondary_action_color}"/>
+            <line x1="750" y1="400" x2="750" y2="500" stroke="${config.secondary_action_color}" stroke-width="2"/>
+            
+            <!-- Code Symbols -->
+            <text x="50" y="250" fill="${config.primary_action_color}" font-size="24" opacity="0.3" font-family="monospace">&lt;/&gt;</text>
+            <text x="850" y="250" fill="${config.secondary_action_color}" font-size="24" opacity="0.3" font-family="monospace">{ }</text>
+            <text x="150" y="350" fill="${config.primary_action_color}" font-size="20" opacity="0.3" font-family="monospace">01010</text>
+            <text x="800" y="500" fill="${config.secondary_action_color}" font-size="20" opacity="0.3" font-family="monospace">10101</text>
+            
+            <!-- Geometric Tech Elements -->
+            <rect x="400" y="50" width="60" height="60" stroke="${config.primary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
+            <rect x="550" y="450" width="50" height="50" stroke="${config.secondary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
+            <polygon points="100,500 150,480 150,520" stroke="${config.primary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
+            <polygon points="900,100 880,150 920,150" stroke="${config.secondary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
+          </svg>
+          
+          <div class="text-center fade-in px-8 relative z-10">
             <div class="mb-8">
-              <svg class="w-32 h-32 mx-auto mb-6 glow-effect" viewBox="0 0 100 100" fill="none">
-                <circle cx="50" cy="50" r="45" stroke="${config.primary_action_color}" stroke-width="3" fill="none"/>
-                <path d="M30 50 L45 65 L70 35" stroke="${config.secondary_action_color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="50" cy="50" r="8" fill="${config.primary_action_color}"/>
+              <svg class="w-32 h-32 mx-auto mb-6 glow-effect" viewBox="0 0 120 120" fill="none">
+                <!-- Monitor/Screen -->
+                <rect x="20" y="30" width="80" height="50" rx="3" stroke="${config.primary_action_color}" stroke-width="3" fill="${config.surface_color}"/>
+                <rect x="25" y="35" width="70" height="40" fill="${config.background_color}"/>
+                
+                <!-- Code Lines -->
+                <line x1="30" y1="42" x2="50" y2="42" stroke="${config.secondary_action_color}" stroke-width="2" stroke-linecap="round"/>
+                <line x1="30" y1="50" x2="70" y2="50" stroke="${config.primary_action_color}" stroke-width="2" stroke-linecap="round"/>
+                <line x1="30" y1="58" x2="55" y2="58" stroke="${config.secondary_action_color}" stroke-width="2" stroke-linecap="round"/>
+                <line x1="30" y1="66" x2="65" y2="66" stroke="${config.primary_action_color}" stroke-width="2" stroke-linecap="round"/>
+                
+                <!-- Monitor Stand -->
+                <rect x="55" y="80" width="10" height="8" fill="${config.primary_action_color}"/>
+                <rect x="45" y="88" width="30" height="3" rx="1.5" fill="${config.primary_action_color}"/>
+                
+                <!-- Programmer Person -->
+                <circle cx="85" cy="95" r="8" fill="${config.secondary_action_color}"/>
+                <path d="M85 103 L85 115" stroke="${config.secondary_action_color}" stroke-width="3" stroke-linecap="round"/>
+                <path d="M85 108 L78 113" stroke="${config.secondary_action_color}" stroke-width="3" stroke-linecap="round"/>
+                <path d="M85 108 L92 113" stroke="${config.secondary_action_color}" stroke-width="3" stroke-linecap="round"/>
+                
+                <!-- Keyboard -->
+                <rect x="20" y="95" width="50" height="8" rx="2" fill="${config.primary_action_color}" opacity="0.7"/>
+                <line x1="25" y1="99" x2="65" y2="99" stroke="${config.background_color}" stroke-width="1"/>
               </svg>
             </div>
             <h1 class="mb-4" style="font-size: ${baseFontSize * 2.5}px; font-weight: 800; color: ${config.text_color};">
-              Arena <em>Pseudocode</em>: Duel Logika
+              Arena <em>Pseudocode</em><br/>Duel Logika
             </h1>
             <p class="mb-12" style="font-size: ${baseFontSize * 1.125}px; color: ${config.text_color}; opacity: 0.8;">
               ${config.game_subtitle}
@@ -1265,5 +1321,5 @@
 
     init();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b7ec441b638e9d5',t:'MTc2NzQwNDIwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b7ed114618ee9d5',t:'MTc2NzQwNDcyNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
