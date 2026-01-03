@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arena Pseudocode: Duel Logika</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+      50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+    
+    .slide-in {
+      animation: slideIn 0.5s ease-out;
+    }
+    
+    .pulse-btn {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .glow-effect {
+      animation: glow 2s ease-in-out infinite;
+    }
+    
+    .drag-block {
+      cursor: move;
+      user-select: none;
+      touch-action: none;
+    }
+    
+    .drag-over {
+      border: 2px dashed #3b82f6;
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    .drop-zone {
+      min-height: 60px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .level-locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .level-completed {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .level-active {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full w-full overflow-auto"></div>
+  <script>
+    // Configuration
+    const defaultConfig = {
+      background_color: "#0f172a",
+      surface_color: "#1e293b",
+      text_color: "#f1f5f9",
+      primary_action_color: "#3b82f6",
+      secondary_action_color: "#10b981",
+      game_title: "Arena Pseudocode: Duel Logika",
+      game_subtitle: "Gim Edukasi Interaktif Berpikir Komputasional",
+      play_button_text: "MULAI PERMAINAN",
+      next_level_text: "Lanjut ke Level Berikutnya",
+      font_family: "Inter",
+      font_size: 16
+    };
+
+    // Game State
+    let gameState = {
+      screen: 'opening',
+      player1Name: '',
+      player2Name: '',
+      currentLevel: 1,
+      maxLevel: 5,
+      player1Score: 0,
+      player2Score: 0,
+      player1Blocks: [],
+      player2Blocks: [],
+      completedLevels: [],
+      sessionId: '',
+      currentCases: null,
+      player1Submitted: false,
+      player2Submitted: false,
+      player1TimeLeft: 30,
+      player2TimeLeft: 30,
+      timerInterval: null
+    };
+
+    // Level Cases
+    const levelCases = {
+      1: [
+        {
+          title: "Menghitung Total Belanja",
+          description: "Seorang pembeli membeli 3 barang: Rp 15.000, Rp 20.000, dan Rp 10.000. Hitung total belanjanya!",
+          correctSequence: ["Mulai", "harga1 = 15000", "harga2 = 20000", "harga3 = 10000", "total = harga1 + harga2 + harga3", "Tampilkan total", "Selesai"],
+          availableBlocks: ["Mulai", "harga1 = 15000", "harga2 = 20000", "harga3 = 10000", "total = harga1 + harga2 + harga3", "Tampilkan total", "Selesai", "total = harga1 - harga2", "harga4 = 5000"]
+        },
+        {
+          title: "Menghitung Harga Setelah Diskon",
+          description: "Harga barang Rp 50.000 mendapat diskon Rp 10.000. Hitung harga yang harus dibayar!",
+          correctSequence: ["Mulai", "harga_awal = 50000", "diskon = 10000", "harga_bayar = harga_awal - diskon", "Tampilkan harga_bayar", "Selesai"],
+          availableBlocks: ["Mulai", "harga_awal = 50000", "diskon = 10000", "harga_bayar = harga_awal - diskon", "Tampilkan harga_bayar", "Selesai", "harga_bayar = harga_awal + diskon", "total = 40000"]
+        }
+      ],
+      2: [
+        {
+          title: "Menghitung Luas Persegi Panjang",
+          description: "Sebuah persegi panjang memiliki panjang 8 cm dan lebar 5 cm. Hitung luasnya!",
+          correctSequence: ["Mulai", "panjang = 8", "lebar = 5", "luas = panjang * lebar", "Tampilkan luas", "Selesai"],
+          availableBlocks: ["Mulai", "panjang = 8", "lebar = 5", "luas = panjang * lebar", "Tampilkan luas", "Selesai", "luas = panjang + lebar", "keliling = panjang * 2"]
+        },
+        {
+          title: "Membagi Permen Sama Rata",
+          description: "Ada 24 permen yang akan dibagikan kepada 6 anak sama rata. Berapa permen yang didapat setiap anak?",
+          correctSequence: ["Mulai", "total_permen = 24", "jumlah_anak = 6", "permen_per_anak = total_permen / jumlah_anak", "Tampilkan permen_per_anak", "Selesai"],
+          availableBlocks: ["Mulai", "total_permen = 24", "jumlah_anak = 6", "permen_per_anak = total_permen / jumlah_anak", "Tampilkan permen_per_anak", "Selesai", "permen_per_anak = total_permen * jumlah_anak", "sisa = 4"]
+        }
+      ],
+      3: [
+        {
+          title: "Menghitung Rata-rata Nilai",
+          description: "Seorang siswa mendapat nilai 80, 90, dan 85. Hitung nilai rata-ratanya!",
+          correctSequence: ["Mulai", "nilai1 = 80", "nilai2 = 90", "nilai3 = 85", "total = nilai1 + nilai2 + nilai3", "rata_rata = total / 3", "Tampilkan rata_rata", "Selesai"],
+          availableBlocks: ["Mulai", "nilai1 = 80", "nilai2 = 90", "nilai3 = 85", "total = nilai1 + nilai2 + nilai3", "rata_rata = total / 3", "Tampilkan rata_rata", "Selesai", "rata_rata = total * 3", "jumlah = 255"]
+        },
+        {
+          title: "Menghitung Sisa Uang",
+          description: "Kamu punya uang Rp 100.000. Membeli buku Rp 35.000 dan pensil Rp 15.000. Berapa sisa uangmu?",
+          correctSequence: ["Mulai", "uang_awal = 100000", "buku = 35000", "pensil = 15000", "total_belanja = buku + pensil", "sisa_uang = uang_awal - total_belanja", "Tampilkan sisa_uang", "Selesai"],
+          availableBlocks: ["Mulai", "uang_awal = 100000", "buku = 35000", "pensil = 15000", "total_belanja = buku + pensil", "sisa_uang = uang_awal - total_belanja", "Tampilkan sisa_uang", "Selesai", "sisa_uang = uang_awal + total_belanja", "pulpen = 10000"]
+        }
+      ],
+      4: [
+        {
+          title: "Menghitung Total Harga dengan Pajak",
+          description: "Harga barang Rp 80.000 dengan pajak 10%. Hitung total yang harus dibayar! (pajak = harga * 10 / 100)",
+          correctSequence: ["Mulai", "harga = 80000", "pajak = harga * 10 / 100", "total_bayar = harga + pajak", "Tampilkan total_bayar", "Selesai"],
+          availableBlocks: ["Mulai", "harga = 80000", "pajak = harga * 10 / 100", "total_bayar = harga + pajak", "Tampilkan total_bayar", "Selesai", "pajak = 10", "total_bayar = harga - pajak", "diskon = 8000"]
+        },
+        {
+          title: "Konversi Jam ke Menit",
+          description: "Andi belajar selama 3 jam. Berapa menit Andi belajar?",
+          correctSequence: ["Mulai", "jam = 3", "menit_per_jam = 60", "total_menit = jam * menit_per_jam", "Tampilkan total_menit", "Selesai"],
+          availableBlocks: ["Mulai", "jam = 3", "menit_per_jam = 60", "total_menit = jam * menit_per_jam", "Tampilkan total_menit", "Selesai", "total_menit = jam + menit_per_jam", "detik = 180", "jam = 180"]
+        }
+      ],
+      5: [
+        {
+          title: "Menghitung Keliling dan Luas Persegi",
+          description: "Sebuah persegi memiliki sisi 12 cm. Hitung keliling dan luasnya!",
+          correctSequence: ["Mulai", "sisi = 12", "keliling = sisi * 4", "luas = sisi * sisi", "Tampilkan keliling", "Tampilkan luas", "Selesai"],
+          availableBlocks: ["Mulai", "sisi = 12", "keliling = sisi * 4", "luas = sisi * sisi", "Tampilkan keliling", "Tampilkan luas", "Selesai", "keliling = sisi + 4", "luas = sisi * 4", "diagonal = sisi * 2"]
+        },
+        {
+          title: "Menghitung Total Belanja dengan Diskon",
+          description: "Belanja senilai Rp 200.000 dapat diskon 15%. Hitung total yang harus dibayar! (diskon_rupiah = harga * 15 / 100)",
+          correctSequence: ["Mulai", "harga = 200000", "diskon_rupiah = harga * 15 / 100", "total_bayar = harga - diskon_rupiah", "Tampilkan total_bayar", "Selesai"],
+          availableBlocks: ["Mulai", "harga = 200000", "diskon_rupiah = harga * 15 / 100", "total_bayar = harga - diskon_rupiah", "Tampilkan total_bayar", "Selesai", "diskon_rupiah = 15", "total_bayar = harga + diskon_rupiah", "pajak = 10000"]
+        }
+      ]
+    };
+
+    // Sound Effects (simple beep tones)
+    const playSound = (type) => {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      if (type === 'success') {
+        oscillator.frequency.value = 800;
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      } else if (type === 'error') {
+        oscillator.frequency.value = 200;
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+      } else if (type === 'click') {
+        oscillator.frequency.value = 600;
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+      } else if (type === 'complete') {
+        // Victory sound - ascending tones
+        const playTone = (freq, delay, duration) => {
+          setTimeout(() => {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            osc.start(audioContext.currentTime);
+            osc.stop(audioContext.currentTime + duration);
+          }, delay);
+        };
+        playTone(523, 0, 0.15);    // C
+        playTone(659, 150, 0.15);  // E
+        playTone(784, 300, 0.3);   // G
+      } else if (type === 'timeout') {
+        oscillator.frequency.value = 150;
+        oscillator.type = 'sawtooth';
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      }
+    };
+
+    // Check if sequence is correct
+    const checkSequence = (userBlocks, correctSequence) => {
+      if (userBlocks.length !== correctSequence.length) return false;
+      return userBlocks.every((block, index) => block === correctSequence[index]);
+    };
+
+    // Timer Functions
+    const startTimer = () => {
+      if (gameState.timerInterval) {
+        clearInterval(gameState.timerInterval);
+      }
+      
+      gameState.timerInterval = setInterval(() => {
+        let needsUpdate = false;
+        
+        if (!gameState.player1Submitted && gameState.player1TimeLeft > 0) {
+          gameState.player1TimeLeft--;
+          needsUpdate = true;
+          
+          if (gameState.player1TimeLeft === 0) {
+            handleTimeout(1);
+          }
+        }
+        
+        if (!gameState.player2Submitted && gameState.player2TimeLeft > 0) {
+          gameState.player2TimeLeft--;
+          needsUpdate = true;
+          
+          if (gameState.player2TimeLeft === 0) {
+            handleTimeout(2);
+          }
+        }
+        
+        if (needsUpdate && gameState.screen === 'gameplay') {
+          updateTimerDisplay();
+        }
+        
+        if (gameState.player1Submitted && gameState.player2Submitted) {
+          clearInterval(gameState.timerInterval);
+        }
+      }, 1000);
+    };
+
+    const stopTimer = () => {
+      if (gameState.timerInterval) {
+        clearInterval(gameState.timerInterval);
+        gameState.timerInterval = null;
+      }
+    };
+
+    const handleTimeout = (player) => {
+      playSound('timeout');
+      
+      if (player === 1) {
+        gameState.player1Submitted = true;
+      } else {
+        gameState.player2Submitted = true;
+      }
+      
+      const submitBtn = document.querySelector(`.submit-btn[data-player="${player}"]`);
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏰ Waktu Habis';
+        submitBtn.style.opacity = '0.5';
+      }
+      
+      checkBothCompleted();
+    };
+
+    const updateTimerDisplay = () => {
+      const timer1 = document.getElementById('timer1');
+      const timer2 = document.getElementById('timer2');
+      
+      if (timer1 && !gameState.player1Submitted) {
+        timer1.textContent = `⏱️ ${gameState.player1TimeLeft}s`;
+        if (gameState.player1TimeLeft <= 10) {
+          timer1.style.color = '#ef4444';
+        }
+      }
+      
+      if (timer2 && !gameState.player2Submitted) {
+        timer2.textContent = `⏱️ ${gameState.player2TimeLeft}s`;
+        if (gameState.player2TimeLeft <= 10) {
+          timer2.style.color = '#ef4444';
+        }
+      }
+    };
+
+    const checkBothCompleted = async () => {
+      if (gameState.player1Submitted && gameState.player2Submitted) {
+        stopTimer();
+        
+        if (!gameState.completedLevels.includes(gameState.currentLevel)) {
+          gameState.completedLevels.push(gameState.currentLevel);
+        }
+        
+        gameState.sessionId = gameState.sessionId || `session_${Date.now()}`;
+        
+        await window.dataSdk.create({
+          player1_name: gameState.player1Name,
+          player2_name: gameState.player2Name,
+          current_level: gameState.currentLevel,
+          player1_total_score: gameState.player1Score,
+          player2_total_score: gameState.player2Score,
+          completed_levels: gameState.completedLevels.join(','),
+          session_id: gameState.sessionId,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Play victory sound after data is saved
+        playSound('complete');
+        
+        setTimeout(() => {
+          if (gameState.currentLevel === gameState.maxLevel) {
+            gameState.screen = 'final';
+          } else {
+            gameState.screen = 'levelComplete';
+          }
+          render();
+        }, 1500);
+      }
+    };
+
+    // Render Functions
+    const renderOpeningScreen = () => {
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const baseFontSize = config.font_size || defaultConfig.font_size;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      
+      return `
+        <div class="h-full flex items-center justify-center" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
+          <div class="text-center fade-in px-8">
+            <div class="mb-8">
+              <svg class="w-32 h-32 mx-auto mb-6 glow-effect" viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="45" stroke="${config.primary_action_color}" stroke-width="3" fill="none"/>
+                <path d="M30 50 L45 65 L70 35" stroke="${config.secondary_action_color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="50" cy="50" r="8" fill="${config.primary_action_color}"/>
+              </svg>
+            </div>
+            <h1 class="mb-4" style="font-size: ${baseFontSize * 2.5}px; font-weight: 800; color: ${config.text_color};">
+              Arena <em>Pseudocode</em>: Duel Logika
+            </h1>
+            <p class="mb-12" style="font-size: ${baseFontSize * 1.125}px; color: ${config.text_color}; opacity: 0.8;">
+              ${config.game_subtitle}
+            </p>
+            <button 
+              id="playBtn" 
+              class="pulse-btn px-12 py-4 rounded-full font-bold transition-all"
+              style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize * 1.25}px;"
+            >
+              ${config.play_button_text}
+            </button>
+          </div>
+        </div>
+      `;
+    };
+
+    const renderPlayerInput = () => {
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const baseFontSize = config.font_size || defaultConfig.font_size;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      
+      return `
+        <div class="h-full flex items-center justify-center p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
+          <div class="w-full max-w-2xl fade-in p-8 rounded-2xl" style="background: ${config.surface_color};">
+            <h2 class="text-center mb-8" style="font-size: ${baseFontSize * 2}px; font-weight: 700; color: ${config.text_color};">
+              Masukkan Nama Pemain
+            </h2>
+            <div class="space-y-6">
+              <div>
+                <label class="block mb-2" style="font-size: ${baseFontSize * 1.125}px; color: ${config.text_color};">
+                  Nama Pemain 1
+                </label>
+                <input 
+                  type="text" 
+                  id="player1Input" 
+                  class="w-full px-4 py-3 rounded-lg"
+                  style="background: ${config.background_color}; color: ${config.text_color}; border: 2px solid ${config.primary_action_color}; font-size: ${baseFontSize}px;"
+                  placeholder="Masukkan nama pemain 1"
+                />
+              </div>
+              <div>
+                <label class="block mb-2" style="font-size: ${baseFontSize * 1.125}px; color: ${config.text_color};">
+                  Nama Pemain 2
+                </label>
+                <input 
+                  type="text" 
+                  id="player2Input" 
+                  class="w-full px-4 py-3 rounded-lg"
+                  style="background: ${config.background_color}; color: ${config.text_color}; border: 2px solid ${config.secondary_action_color}; font-size: ${baseFontSize}px;"
+                  placeholder="Masukkan nama pemain 2"
+                />
+              </div>
+              <button 
+                id="startGameBtn" 
+                class="w-full py-4 rounded-lg font-bold transition-all"
+                style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize * 1.125}px;"
+              >
+                Mulai Petualangan
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    const renderIntroduction = () => {
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const baseFontSize = config.font_size || defaultConfig.font_size;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      
+      return `
+        <div class="h-full overflow-auto p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
+          <div class="max-w-4xl mx-auto fade-in">
+            <div class="p-8 rounded-2xl mb-6" style="background: ${config.surface_color};">
+              <h2 class="mb-6 text-center" style="font-size: ${baseFontSize * 2}px; font-weight: 700; color: ${config.text_color};">
+                Pengantar Materi
+              </h2>
+              
+              <div class="space-y-6" style="color: ${config.text_color};">
+                <div>
+                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.5}px; font-weight: 600; color: ${config.primary_action_color};">
+                    🧠 Apa itu Algoritma?
+                  </h3>
+                  <p style="font-size: ${baseFontSize}px; line-height: 1.6;">
+                    Algoritma adalah urutan langkah-langkah logis untuk menyelesaikan suatu masalah, seperti resep masakan. Setiap langkah harus berurutan dan jelas.
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.5}px; font-weight: 600; color: ${config.primary_action_color};">
+                    📝 Apa itu <em>Pseudocode</em>?
+                  </h3>
+                  <p style="font-size: ${baseFontSize}px; line-height: 1.6;">
+                    <em style="font-style: italic;">Pseudocode</em> adalah cara menulis algoritma dengan bahasa sederhana yang mudah dipahami manusia, tetapi mengikuti struktur logika pemrograman.
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.5}px; font-weight: 600; color: ${config.primary_action_color};">
+                    🔢 Variabel dan Operasi
+                  </h3>
+                  <p style="font-size: ${baseFontSize}px; line-height: 1.6; margin-bottom: 8px;">
+                    <strong>Variabel</strong> adalah tempat menyimpan data. Contoh: harga = 5000
+                  </p>
+                  <p style="font-size: ${baseFontSize}px; line-height: 1.6;">
+                    <strong>Operasi Matematika:</strong> penjumlahan (+), pengurangan (-), perkalian (*), pembagian (/)
+                  </p>
+                </div>
+                
+                <div class="p-6 rounded-lg" style="background: ${config.background_color};">
+                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.5}px; font-weight: 600; color: ${config.secondary_action_color};">
+                    ✨ Contoh <em style="font-style: italic;">Pseudocode</em> Sederhana
+                  </h3>
+                  <div class="space-y-2" style="font-size: ${baseFontSize * 0.9375}px; font-family: 'Courier New', monospace;">
+                    <div class="p-2 rounded" style="background: ${config.surface_color};">Mulai</div>
+                    <div class="p-2 rounded" style="background: ${config.surface_color};">Simpan 25000 ke harga_buku</div>
+                    <div class="p-2 rounded" style="background: ${config.surface_color};">Simpan 5000 ke harga_pensil</div>
+                    <div class="p-2 rounded" style="background: ${config.surface_color};">Hitung harga_buku + harga_pensil, simpan ke total</div>
+                    <div class="p-2 rounded" style="background: ${config.surface_color};">Tampilkan total</div>
+                    <div class="p-2 rounded" style="background: ${config.surface_color};">Selesai</div>
+                  </div>
+                </div>
+              </div>
+              
+              <button 
+                id="startChallengeBtn" 
+                class="w-full mt-8 py-4 rounded-lg font-bold transition-all"
+                style="background: ${config.secondary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize * 1.25}px;"
+              >
+                Mulai Tantangan
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    const renderLevelMap = () => {
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const baseFontSize = config.font_size || defaultConfig.font_size;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      
+      let levelsHTML = '';
+      for (let i = 1; i <= gameState.maxLevel; i++) {
+        const isCompleted = gameState.completedLevels.includes(i);
+        const isLocked = i > 1 && !gameState.completedLevels.includes(i - 1);
+        const isActive = i === gameState.currentLevel;
+        
+        let levelClass = 'level-active';
+        let statusText = 'Tersedia';
+        
+        if (isCompleted) {
+          levelClass = 'level-completed';
+          statusText = '✓ Selesai';
+        } else if (isLocked) {
+          levelClass = 'level-locked';
+          statusText = '🔒 Terkunci';
+        }
+        
+        levelsHTML += `
+          <button 
+            class="level-btn p-6 rounded-xl ${levelClass} ${isLocked ? 'level-locked' : ''} transition-all"
+            data-level="${i}"
+            ${isLocked ? 'disabled' : ''}
+            style="color: ${config.background_color}; font-size: ${baseFontSize}px;"
+          >
+            <div style="font-size: ${baseFontSize * 2}px; font-weight: 800; margin-bottom: 8px;">Level ${i}</div>
+            <div style="font-size: ${baseFontSize * 0.875}px; opacity: 0.9;">${statusText}</div>
+          </button>
+        `;
+      }
+      
+      return `
+        <div class="h-full overflow-auto p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
+          <div class="max-w-6xl mx-auto fade-in">
+            <h2 class="text-center mb-8" style="font-size: ${baseFontSize * 2.5}px; font-weight: 800; color: ${config.text_color};">
+              Peta Arena
+            </h2>
+            <div class="grid grid-cols-5 gap-6 mb-8">
+              ${levelsHTML}
+            </div>
+            <div class="text-center p-6 rounded-xl" style="background: ${config.surface_color}; color: ${config.text_color};">
+              <p style="font-size: ${baseFontSize * 1.125}px;">
+                <strong>${gameState.player1Name}</strong> vs <strong>${gameState.player2Name}</strong>
+              </p>
+              <p class="mt-2" style="font-size: ${baseFontSize}px; opacity: 0.8;">
+                Skor: ${gameState.player1Score} - ${gameState.player2Score}
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    const renderGameplay = () => {
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const baseFontSize = config.font_size || defaultConfig.font_size;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      
+      const cases = gameState.currentCases;
+      
+      const renderPlayerPanel = (playerNum, caseData) => {
+        const playerColor = playerNum === 1 ? config.primary_action_color : config.secondary_action_color;
+        const playerName = playerNum === 1 ? gameState.player1Name : gameState.player2Name;
+        const playerBlocks = playerNum === 1 ? gameState.player1Blocks : gameState.player2Blocks;
+        
+        let availableBlocksHTML = caseData.availableBlocks.map((block, index) => `
+          <div 
+            class="drag-block p-3 rounded-lg mb-2 cursor-move"
+            style="background: ${config.surface_color}; color: ${config.text_color}; border: 2px solid ${playerColor}; font-size: ${baseFontSize * 0.875}px;"
+            draggable="true"
+            data-player="${playerNum}"
+            data-block="${block}"
+          >
+            ${block}
+          </div>
+        `).join('');
+        
+        let constructedBlocksHTML = playerBlocks.map((block, index) => `
+          <div 
+            class="p-3 rounded-lg mb-2"
+            style="background: ${playerColor}; color: ${config.background_color}; font-size: ${baseFontSize * 0.875}px;"
+            data-index="${index}"
+          >
+            ${block}
+          </div>
+        `).join('');
+        
+        return `
+          <div class="flex-1 p-4 rounded-xl" style="background: ${config.surface_color};">
+            <div class="mb-4 p-4 rounded-lg text-center" style="background: ${playerColor}; color: ${config.background_color};">
+              <h3 style="font-size: ${baseFontSize * 1.5}px; font-weight: 700;">${playerName}</h3>
+              <div id="timer${playerNum}" class="mt-2" style="font-size: ${baseFontSize * 1.125}px; font-weight: 600;">
+                ⏱️ ${playerNum === 1 ? gameState.player1TimeLeft : gameState.player2TimeLeft}s
+              </div>
+            </div>
+            
+            <div class="mb-4 p-4 rounded-lg" style="background: ${config.background_color}; color: ${config.text_color};">
+              <h4 style="font-size: ${baseFontSize * 1.125}px; font-weight: 600; margin-bottom: 8px;">${caseData.title}</h4>
+              <p style="font-size: ${baseFontSize * 0.875}px; opacity: 0.9;">${caseData.description}</p>
+            </div>
+            
+            <div class="mb-4">
+              <h4 class="mb-2" style="font-size: ${baseFontSize}px; font-weight: 600; color: ${config.text_color};">
+                Blok Tersedia:
+              </h4>
+              <div class="available-blocks-${playerNum}" style="max-height: 200px; overflow-y: auto;">
+                ${availableBlocksHTML}
+              </div>
+            </div>
+            
+            <div>
+              <h4 class="mb-2" style="font-size: ${baseFontSize}px; font-weight: 600; color: ${config.text_color};">
+                <em style="font-style: italic;">Pseudocode</em> Kamu:
+              </h4>
+              <div 
+                class="drop-zone constructed-blocks-${playerNum} p-4"
+                data-player="${playerNum}"
+                style="background: ${config.background_color}; min-height: 300px;"
+              >
+                ${constructedBlocksHTML.length > 0 ? constructedBlocksHTML : `<p style="color: ${config.text_color}; opacity: 0.5; font-size: ${baseFontSize * 0.875}px;">Seret blok ke sini...</p>`}
+              </div>
+            </div>
+            
+            <div class="mt-4 flex gap-2">
+              <button 
+                class="reset-btn flex-1 py-3 rounded-lg font-bold transition-all"
+                data-player="${playerNum}"
+                style="background: ${config.background_color}; color: ${config.text_color}; border: 2px solid ${playerColor}; font-size: ${baseFontSize}px;"
+              >
+                Reset
+              </button>
+              <button 
+                class="submit-btn flex-1 py-3 rounded-lg font-bold transition-all"
+                data-player="${playerNum}"
+                style="background: ${playerColor}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
+              >
+                Selesai
+              </button>
+            </div>
+          </div>
+        `;
+      };
+      
+      return `
+        <div class="h-full overflow-auto p-6" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
+          <div class="mb-4 text-center" style="color: ${config.text_color};">
+            <h2 style="font-size: ${baseFontSize * 2}px; font-weight: 700;">Level ${gameState.currentLevel}</h2>
+            <p style="font-size: ${baseFontSize}px; opacity: 0.8;">Susun <em style="font-style: italic;">pseudocode</em> dengan benar!</p>
+          </div>
+          
+          <div class="flex gap-6 mb-4">
+            ${renderPlayerPanel(1, cases[0])}
+            ${renderPlayerPanel(2, cases[1])}
+          </div>
+        </div>
+      `;
+    };
+
+    const renderLevelComplete = () => {
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const baseFontSize = config.font_size || defaultConfig.font_size;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      
+      const isLastLevel = gameState.currentLevel === gameState.maxLevel;
+      
+      return `
+        <div class="h-full flex items-center justify-center p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
+          <div class="w-full max-w-2xl fade-in p-8 rounded-2xl text-center" style="background: ${config.surface_color};">
+            <div class="text-6xl mb-6">🎉</div>
+            <h2 class="mb-6" style="font-size: ${baseFontSize * 2}px; font-weight: 700; color: ${config.text_color};">
+              Level ${gameState.currentLevel} Selesai!
+            </h2>
+            
+            <div class="mb-8 space-y-4">
+              <div class="p-4 rounded-lg" style="background: ${config.background_color};">
+                <p style="font-size: ${baseFontSize * 1.125}px; color: ${config.primary_action_color}; font-weight: 600;">
+                  ${gameState.player1Name}: ${gameState.player1Score} poin
+                </p>
+              </div>
+              <div class="p-4 rounded-lg" style="background: ${config.background_color};">
+                <p style="font-size: ${baseFontSize * 1.125}px; color: ${config.secondary_action_color}; font-weight: 600;">
+                  ${gameState.player2Name}: ${gameState.player2Score} poin
+                </p>
+              </div>
+            </div>
+            
+            ${!isLastLevel ? `
+              <button 
+                id="nextLevelBtn" 
+                class="w-full py-4 rounded-lg font-bold mb-4 transition-all"
+                style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize * 1.25}px;"
+              >
+                ${config.next_level_text}
+              </button>
+            ` : ''}
+            
+            <button 
+              id="backToMapBtn" 
+              class="w-full py-4 rounded-lg font-bold transition-all"
+              style="background: ${config.surface_color}; color: ${config.text_color}; border: 2px solid ${config.primary_action_color}; font-size: ${baseFontSize * 1.125}px;"
+            >
+              Kembali ke Peta Level
+            </button>
+          </div>
+        </div>
+      `;
+    };
+
+    const renderFinalScreen = () => {
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const baseFontSize = config.font_size || defaultConfig.font_size;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      
+      const winner = gameState.player1Score > gameState.player2Score ? gameState.player1Name : 
+                     gameState.player2Score > gameState.player1Score ? gameState.player2Name : 
+                     'Seri';
+      
+      return `
+        <div class="h-full flex items-center justify-center p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
+          <div class="w-full max-w-3xl fade-in p-8 rounded-2xl text-center" style="background: ${config.surface_color};">
+            <div class="text-6xl mb-6">🏆</div>
+            <h2 class="mb-4" style="font-size: ${baseFontSize * 2.5}px; font-weight: 800; color: ${config.text_color};">
+              Permainan Selesai!
+            </h2>
+            
+            <div class="mb-8 p-6 rounded-xl" style="background: ${config.background_color};">
+              <h3 class="mb-6" style="font-size: ${baseFontSize * 1.5}px; font-weight: 600; color: ${config.text_color};">
+                ${winner === 'Seri' ? 'Hasil Seri!' : `Pemenang: ${winner}! 🎉`}
+              </h3>
+              
+              <div class="space-y-4">
+                <div class="p-4 rounded-lg" style="background: ${config.surface_color}; border: 3px solid ${config.primary_action_color};">
+                  <p style="font-size: ${baseFontSize * 1.25}px; color: ${config.primary_action_color}; font-weight: 700;">
+                    ${gameState.player1Name}
+                  </p>
+                  <p style="font-size: ${baseFontSize * 2}px; color: ${config.text_color}; font-weight: 800; margin-top: 8px;">
+                    ${gameState.player1Score} poin
+                  </p>
+                </div>
+                
+                <div class="p-4 rounded-lg" style="background: ${config.surface_color}; border: 3px solid ${config.secondary_action_color};">
+                  <p style="font-size: ${baseFontSize * 1.25}px; color: ${config.secondary_action_color}; font-weight: 700;">
+                    ${gameState.player2Name}
+                  </p>
+                  <p style="font-size: ${baseFontSize * 2}px; color: ${config.text_color}; font-weight: 800; margin-top: 8px;">
+                    ${gameState.player2Score} poin
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex gap-4">
+              <button 
+                id="newGameBtn" 
+                class="flex-1 py-4 rounded-lg font-bold transition-all"
+                style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize * 1.125}px;"
+              >
+                Mainkan Permainan Baru
+              </button>
+              <button 
+                id="backToMapFinalBtn" 
+                class="flex-1 py-4 rounded-lg font-bold transition-all"
+                style="background: ${config.surface_color}; color: ${config.text_color}; border: 2px solid ${config.secondary_action_color}; font-size: ${baseFontSize * 1.125}px;"
+              >
+                Kembali ke Peta Level
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    // Drag and Drop Handlers
+    let draggedElement = null;
+    let draggedBlock = null;
+    let draggedPlayer = null;
+
+    const setupDragAndDrop = () => {
+      // Remove old listeners if they exist
+      const oldDragStart = document._dragStartHandler;
+      const oldDragEnd = document._dragEndHandler;
+      const oldDragOver = document._dragOverHandler;
+      const oldDragLeave = document._dragLeaveHandler;
+      const oldDrop = document._dropHandler;
+      
+      if (oldDragStart) document.removeEventListener('dragstart', oldDragStart);
+      if (oldDragEnd) document.removeEventListener('dragend', oldDragEnd);
+      if (oldDragOver) document.removeEventListener('dragover', oldDragOver);
+      if (oldDragLeave) document.removeEventListener('dragleave', oldDragLeave);
+      if (oldDrop) document.removeEventListener('drop', oldDrop);
+      
+      const dragStartHandler = (e) => {
+        if (e.target.classList.contains('drag-block')) {
+          draggedElement = e.target;
+          draggedBlock = e.target.dataset.block;
+          draggedPlayer = parseInt(e.target.dataset.player);
+          e.target.style.opacity = '0.5';
+          playSound('click');
+        }
+      };
+
+      const dragEndHandler = (e) => {
+        if (e.target.classList.contains('drag-block')) {
+          e.target.style.opacity = '1';
+          draggedElement = null;
+          draggedBlock = null;
+          draggedPlayer = null;
+        }
+      };
+
+      const dragOverHandler = (e) => {
+        e.preventDefault();
+        if (e.target.classList.contains('drop-zone') || e.target.closest('.drop-zone')) {
+          const dropZone = e.target.classList.contains('drop-zone') ? e.target : e.target.closest('.drop-zone');
+          dropZone.classList.add('drag-over');
+        }
+      };
+
+      const dragLeaveHandler = (e) => {
+        if (e.target.classList.contains('drop-zone')) {
+          e.target.classList.remove('drag-over');
+        }
+      };
+
+      const dropHandler = (e) => {
+        e.preventDefault();
+        const dropZone = e.target.classList.contains('drop-zone') ? e.target : e.target.closest('.drop-zone');
+        
+        if (dropZone && draggedBlock && draggedPlayer) {
+          const targetPlayer = parseInt(dropZone.dataset.player);
+          
+          if (targetPlayer === draggedPlayer) {
+            // Only add the block once
+            if (targetPlayer === 1) {
+              gameState.player1Blocks.push(draggedBlock);
+            } else {
+              gameState.player2Blocks.push(draggedBlock);
+            }
+            
+            dropZone.classList.remove('drag-over');
+            playSound('click');
+            
+            // Clear dragged state immediately
+            draggedElement = null;
+            draggedBlock = null;
+            draggedPlayer = null;
+            
+            updateGameplay();
+          }
+        }
+      };
+      
+      document.addEventListener('dragstart', dragStartHandler);
+      document.addEventListener('dragend', dragEndHandler);
+      document.addEventListener('dragover', dragOverHandler);
+      document.addEventListener('dragleave', dragLeaveHandler);
+      document.addEventListener('drop', dropHandler);
+      
+      // Store references for cleanup
+      document._dragStartHandler = dragStartHandler;
+      document._dragEndHandler = dragEndHandler;
+      document._dragOverHandler = dragOverHandler;
+      document._dragLeaveHandler = dragLeaveHandler;
+      document._dropHandler = dropHandler;
+    };
+
+    // Event Handlers
+    const setupEventHandlers = () => {
+      const app = document.getElementById('app');
+      
+      app.addEventListener('click', async (e) => {
+        if (e.target.id === 'playBtn') {
+          playSound('click');
+          gameState.screen = 'playerInput';
+          render();
+        }
+        
+        if (e.target.id === 'startGameBtn') {
+          const player1 = document.getElementById('player1Input').value.trim();
+          const player2 = document.getElementById('player2Input').value.trim();
+          
+          if (player1 && player2) {
+            gameState.player1Name = player1;
+            gameState.player2Name = player2;
+            gameState.screen = 'introduction';
+            playSound('click');
+            render();
+          } else {
+            const messageEl = document.createElement('p');
+            messageEl.textContent = 'Mohon isi kedua nama pemain!';
+            messageEl.className = 'text-center mt-4';
+            messageEl.style.color = '#ef4444';
+            messageEl.style.fontSize = '14px';
+            e.target.parentElement.appendChild(messageEl);
+            setTimeout(() => messageEl.remove(), 2000);
+          }
+        }
+        
+        if (e.target.id === 'startChallengeBtn') {
+          playSound('click');
+          gameState.screen = 'levelMap';
+          render();
+        }
+        
+        if (e.target.classList.contains('level-btn') && !e.target.disabled) {
+          const level = parseInt(e.target.dataset.level);
+          playSound('click');
+          
+          // Set state immediately
+          gameState.currentLevel = level;
+          gameState.currentCases = levelCases[level];
+          gameState.player1Blocks = [];
+          gameState.player2Blocks = [];
+          gameState.player1Submitted = false;
+          gameState.player2Submitted = false;
+          gameState.player1TimeLeft = 30;
+          gameState.player2TimeLeft = 30;
+          gameState.screen = 'gameplay';
+          
+          // Render immediately without delay
+          render();
+          
+          // Setup drag and drop after render
+          setTimeout(() => {
+            setupDragAndDrop();
+            startTimer();
+          }, 0);
+        }
+        
+        if (e.target.classList.contains('reset-btn')) {
+          const player = parseInt(e.target.dataset.player);
+          if (player === 1) {
+            gameState.player1Blocks = [];
+          } else {
+            gameState.player2Blocks = [];
+          }
+          playSound('click');
+          updateGameplay();
+        }
+        
+        if (e.target.classList.contains('submit-btn')) {
+          const player = parseInt(e.target.dataset.player);
+          
+          if ((player === 1 && gameState.player1Submitted) || (player === 2 && gameState.player2Submitted)) {
+            return;
+          }
+          
+          const userBlocks = player === 1 ? gameState.player1Blocks : gameState.player2Blocks;
+          const correctSequence = gameState.currentCases[player - 1].correctSequence;
+          
+          const isCorrect = checkSequence(userBlocks, correctSequence);
+          
+          if (player === 1) {
+            gameState.player1Submitted = true;
+            if (isCorrect) {
+              gameState.player1Score += 100;
+              const timeBonus = gameState.player1TimeLeft * 2;
+              gameState.player1Score += timeBonus;
+            }
+          } else {
+            gameState.player2Submitted = true;
+            if (isCorrect) {
+              gameState.player2Score += 100;
+              const timeBonus = gameState.player2TimeLeft * 2;
+              gameState.player2Score += timeBonus;
+            }
+          }
+          
+          if (isCorrect) {
+            playSound('success');
+          } else {
+            playSound('error');
+          }
+          
+          e.target.disabled = true;
+          e.target.textContent = isCorrect ? '✓ Benar!' : '✗ Salah';
+          e.target.style.opacity = '0.7';
+          
+          checkBothCompleted();
+        }
+        
+        if (e.target.id === 'nextLevelBtn') {
+          playSound('click');
+          
+          // Set state immediately
+          gameState.currentLevel++;
+          gameState.currentCases = levelCases[gameState.currentLevel];
+          gameState.player1Blocks = [];
+          gameState.player2Blocks = [];
+          gameState.player1Submitted = false;
+          gameState.player2Submitted = false;
+          gameState.player1TimeLeft = 30;
+          gameState.player2TimeLeft = 30;
+          gameState.screen = 'gameplay';
+          
+          // Render immediately
+          render();
+          
+          // Setup after render
+          setTimeout(() => {
+            setupDragAndDrop();
+            startTimer();
+          }, 0);
+        }
+        
+        if (e.target.id === 'backToMapBtn' || e.target.id === 'backToMapFinalBtn') {
+          stopTimer();
+          gameState.screen = 'levelMap';
+          playSound('click');
+          render();
+        }
+        
+        if (e.target.id === 'newGameBtn') {
+          stopTimer();
+          gameState = {
+            screen: 'playerInput',
+            player1Name: '',
+            player2Name: '',
+            currentLevel: 1,
+            maxLevel: 5,
+            player1Score: 0,
+            player2Score: 0,
+            player1Blocks: [],
+            player2Blocks: [],
+            completedLevels: [],
+            sessionId: '',
+            currentCases: null,
+            player1Submitted: false,
+            player2Submitted: false,
+            player1TimeLeft: 30,
+            player2TimeLeft: 30,
+            timerInterval: null
+          };
+          playSound('click');
+          render();
+        }
+      });
+    };
+
+    const updateGameplay = () => {
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const baseFontSize = config.font_size || defaultConfig.font_size;
+      
+      [1, 2].forEach(playerNum => {
+        const playerBlocks = playerNum === 1 ? gameState.player1Blocks : gameState.player2Blocks;
+        const playerColor = playerNum === 1 ? config.primary_action_color : config.secondary_action_color;
+        const constructedContainer = document.querySelector(`.constructed-blocks-${playerNum}`);
+        
+        if (constructedContainer) {
+          if (playerBlocks.length === 0) {
+            constructedContainer.innerHTML = `<p style="color: ${config.text_color}; opacity: 0.5; font-size: ${baseFontSize * 0.875}px;">Seret blok ke sini...</p>`;
+          } else {
+            constructedContainer.innerHTML = playerBlocks.map((block, index) => `
+              <div 
+                class="p-3 rounded-lg mb-2"
+                style="background: ${playerColor}; color: ${config.background_color}; font-size: ${baseFontSize * 0.875}px;"
+                data-index="${index}"
+              >
+                ${block}
+              </div>
+            `).join('');
+          }
+        }
+      });
+    };
+
+    const render = () => {
+      const app = document.getElementById('app');
+      
+      switch (gameState.screen) {
+        case 'opening':
+          app.innerHTML = renderOpeningScreen();
+          break;
+        case 'playerInput':
+          app.innerHTML = renderPlayerInput();
+          break;
+        case 'introduction':
+          app.innerHTML = renderIntroduction();
+          break;
+        case 'levelMap':
+          app.innerHTML = renderLevelMap();
+          break;
+        case 'gameplay':
+          app.innerHTML = renderGameplay();
+          break;
+        case 'levelComplete':
+          app.innerHTML = renderLevelComplete();
+          break;
+        case 'final':
+          app.innerHTML = renderFinalScreen();
+          break;
+      }
+    };
+
+    // Data SDK Handler
+    const dataHandler = {
+      onDataChanged(data) {
+        // Data is stored for tracking purposes, no UI updates needed here
+      }
+    };
+
+    // Element SDK Implementation
+    const onConfigChange = async (config) => {
+      const baseFontSize = config.font_size || defaultConfig.font_size;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      
+      document.body.style.fontFamily = `${fontFamily}, system-ui, sans-serif`;
+      
+      const titleElements = document.querySelectorAll('h1, h2');
+      titleElements.forEach(el => {
+        if (el.tagName === 'H1') {
+          el.style.fontSize = `${baseFontSize * 2.5}px`;
+        } else {
+          el.style.fontSize = `${baseFontSize * 2}px`;
+        }
+        el.style.color = config.text_color || defaultConfig.text_color;
+      });
+      
+      const backgrounds = document.querySelectorAll('[style*="background"]');
+      backgrounds.forEach(el => {
+        const currentBg = el.style.background;
+        if (currentBg.includes(defaultConfig.background_color)) {
+          el.style.background = currentBg.replace(defaultConfig.background_color, config.background_color || defaultConfig.background_color);
+        }
+        if (currentBg.includes(defaultConfig.surface_color)) {
+          el.style.background = currentBg.replace(defaultConfig.surface_color, config.surface_color || defaultConfig.surface_color);
+        }
+      });
+      
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach(btn => {
+        if (btn.id === 'playBtn' || btn.classList.contains('submit-btn')) {
+          btn.style.background = config.primary_action_color || defaultConfig.primary_action_color;
+        }
+      });
+    };
+
+    const mapToCapabilities = (config) => ({
+      recolorables: [
+        {
+          get: () => config.background_color || defaultConfig.background_color,
+          set: (value) => {
+            if (window.elementSdk && window.elementSdk.config) {
+              window.elementSdk.config.background_color = value;
+              window.elementSdk.setConfig({ background_color: value });
+            }
+          }
+        },
+        {
+          get: () => config.surface_color || defaultConfig.surface_color,
+          set: (value) => {
+            if (window.elementSdk && window.elementSdk.config) {
+              window.elementSdk.config.surface_color = value;
+              window.elementSdk.setConfig({ surface_color: value });
+            }
+          }
+        },
+        {
+          get: () => config.text_color || defaultConfig.text_color,
+          set: (value) => {
+            if (window.elementSdk && window.elementSdk.config) {
+              window.elementSdk.config.text_color = value;
+              window.elementSdk.setConfig({ text_color: value });
+            }
+          }
+        },
+        {
+          get: () => config.primary_action_color || defaultConfig.primary_action_color,
+          set: (value) => {
+            if (window.elementSdk && window.elementSdk.config) {
+              window.elementSdk.config.primary_action_color = value;
+              window.elementSdk.setConfig({ primary_action_color: value });
+            }
+          }
+        },
+        {
+          get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+          set: (value) => {
+            if (window.elementSdk && window.elementSdk.config) {
+              window.elementSdk.config.secondary_action_color = value;
+              window.elementSdk.setConfig({ secondary_action_color: value });
+            }
+          }
+        }
+      ],
+      borderables: [],
+      fontEditable: {
+        get: () => config.font_family || defaultConfig.font_family,
+        set: (value) => {
+          if (window.elementSdk && window.elementSdk.config) {
+            window.elementSdk.config.font_family = value;
+            window.elementSdk.setConfig({ font_family: value });
+          }
+        }
+      },
+      fontSizeable: {
+        get: () => config.font_size || defaultConfig.font_size,
+        set: (value) => {
+          if (window.elementSdk && window.elementSdk.config) {
+            window.elementSdk.config.font_size = value;
+            window.elementSdk.setConfig({ font_size: value });
+          }
+        }
+      }
+    });
+
+    const mapToEditPanelValues = (config) => new Map([
+      ["game_title", config.game_title || defaultConfig.game_title],
+      ["game_subtitle", config.game_subtitle || defaultConfig.game_subtitle],
+      ["play_button_text", config.play_button_text || defaultConfig.play_button_text],
+      ["next_level_text", config.next_level_text || defaultConfig.next_level_text]
+    ]);
+
+    // Initialize
+    const init = async () => {
+      if (window.dataSdk) {
+        await window.dataSdk.init(dataHandler);
+      }
+      
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange,
+          mapToCapabilities,
+          mapToEditPanelValues
+        });
+      }
+      
+      render();
+      setupEventHandlers();
+    };
+
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b7ec441b638e9d5',t:'MTc2NzQwNDIwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
