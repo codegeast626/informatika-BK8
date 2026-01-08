@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arena Pseudocode: Duel Logika</title>
+  <title>Menyusun Pseudocode</title>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="/_sdk/data_sdk.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -78,11 +78,52 @@
     .level-active {
       background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     }
+    
+    .keypad {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.98);
+      border-top: 3px solid #3b82f6;
+      padding: 16px;
+      z-index: 1000;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+    
+    .keypad.active {
+      transform: translateY(0);
+    }
+    
+    .keypad-key {
+      min-width: 60px;
+      height: 50px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .keypad-key:active {
+      transform: scale(0.95);
+    }
   </style>
   <style>@view-transition { navigation: auto; }</style>
  </head>
  <body class="h-full">
-  <div id="app" class="h-full w-full overflow-auto"></div>
+  <div id="app" class="h-full w-full overflow-auto"></div><!-- Virtual Keypad -->
+  <div id="keypad" class="keypad">
+   <div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-center mb-3">
+     <div id="keypadTarget" class="text-white text-sm opacity-75"></div><button id="closeKeypad" class="px-4 py-2 rounded-lg bg-red-500 text-white font-bold"> Tutup ✕ </button>
+    </div>
+    <div class="grid grid-cols-10 gap-2"><button class="keypad-key bg-slate-700 text-white col-span-1" data-key="1">1</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="2">2</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="3">3</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="4">4</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="5">5</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="6">6</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="7">7</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="8">8</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="9">9</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="0">0</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="Q">Q</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="W">W</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="E">E</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="R">R</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="T">T</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="Y">Y</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="U">U</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="I">I</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="O">O</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="P">P</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="A">A</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="S">S</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="D">D</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="F">F</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="G">G</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="H">H</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="J">J</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="K">K</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="L">L</button> <button class="keypad-key bg-red-500 text-white col-span-1" data-key="Backspace">⌫</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="Z">Z</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="X">X</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="C">C</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="V">V</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="B">B</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="N">N</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="M">M</button> <button class="keypad-key bg-blue-500 text-white col-span-3" data-key=" ">SPASI</button>
+    </div>
+   </div>
+  </div>
   <script>
     // Configuration
     const defaultConfig = {
@@ -120,6 +161,75 @@
       timerInterval: null,
       player1Result: '',
       player2Result: ''
+    };
+    
+    // Keypad State
+    let keypadState = {
+      activeInput: null,
+      isOpen: false
+    };
+
+    // Keypad Functions
+    const openKeypad = (inputElement) => {
+      keypadState.activeInput = inputElement;
+      keypadState.isOpen = true;
+      
+      const keypad = document.getElementById('keypad');
+      const keypadTarget = document.getElementById('keypadTarget');
+      
+      keypad.classList.add('active');
+      keypadTarget.textContent = `Mengetik: ${inputElement.placeholder || 'Input nama'}`;
+      
+      playSound('click');
+    };
+    
+    const closeKeypad = () => {
+      keypadState.activeInput = null;
+      keypadState.isOpen = false;
+      
+      const keypad = document.getElementById('keypad');
+      keypad.classList.remove('active');
+      
+      playSound('click');
+    };
+    
+    const handleKeypadInput = (key) => {
+      if (!keypadState.activeInput) return;
+      
+      const input = keypadState.activeInput;
+      const currentValue = input.value;
+      
+      if (key === 'Backspace') {
+        input.value = currentValue.slice(0, -1);
+      } else {
+        input.value = currentValue + key;
+      }
+      
+      playSound('click');
+      
+      // Trigger input event for any listeners
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    
+    // Setup Keypad Event Listeners
+    const setupKeypadListeners = () => {
+      const keypad = document.getElementById('keypad');
+      const closeBtn = document.getElementById('closeKeypad');
+      
+      // Close button
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeKeypad();
+      });
+      
+      // Keypad keys
+      keypad.addEventListener('click', (e) => {
+        if (e.target.classList.contains('keypad-key')) {
+          e.stopPropagation();
+          const key = e.target.dataset.key;
+          handleKeypadInput(key);
+        }
+      });
     };
 
     // Level Cases
@@ -494,6 +604,7 @@
                   class="w-full px-4 py-3 rounded-lg"
                   style="background: white; color: ${config.background_color}; border: 2px solid ${config.primary_action_color}; font-size: ${baseFontSize}px;"
                   placeholder="Masukkan nama pemain 1"
+                  readonly
                 />
               </div>
             </div>
@@ -518,6 +629,7 @@
                   class="w-full px-4 py-3 rounded-lg"
                   style="background: white; color: ${config.background_color}; border: 2px solid ${config.secondary_action_color}; font-size: ${baseFontSize}px;"
                   placeholder="Masukkan nama pemain 2"
+                  readonly
                 />
               </div>
             </div>
@@ -530,7 +642,7 @@
               class="px-12 py-4 rounded-full font-bold transition-all shadow-2xl pulse-btn"
               style="background: ${config.background_color}; color: ${config.text_color}; font-size: ${baseFontSize * 1.25}px; border: 3px solid ${config.text_color};"
             >
-              Mulai Petualangan
+              Mulai Permainan
             </button>
           </div>
         </div>
@@ -1162,6 +1274,13 @@
     const setupEventHandlers = () => {
       const app = document.getElementById('app');
       
+      // Handle input focus to open keypad
+      app.addEventListener('click', (e) => {
+        if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+          openKeypad(e.target);
+        }
+      });
+      
       app.addEventListener('click', async (e) => {
         if (e.target.id === 'playBtn') {
           playSound('click');
@@ -1534,9 +1653,10 @@
       
       render();
       setupEventHandlers();
+      setupKeypadListeners();
     };
 
     init();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b7f0d5ec16ce9d5',t:'MTc2NzQwNzE5Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ba9ebc5730ae9cd',t:'MTc2Nzg1NjcwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
