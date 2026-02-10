@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Menyusun Pseudocode</title>
+  <title>Arena Pseudocode</title>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="/_sdk/data_sdk.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -61,7 +61,7 @@
     
     .drop-zone {
       min-height: 60px;
-      border: 2px dashed #cbd5e1;
+      border: 2px dashed #475569;
       border-radius: 8px;
       transition: all 0.3s ease;
     }
@@ -72,11 +72,11 @@
     }
     
     .level-completed {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
     }
     
     .level-active {
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     }
     
     .keypad {
@@ -85,7 +85,7 @@
       left: 0;
       right: 0;
       background: rgba(15, 23, 42, 0.98);
-      border-top: 3px solid #3b82f6;
+      border-top: 3px solid #2563eb;
       padding: 16px;
       z-index: 1000;
       transform: translateY(100%);
@@ -94,6 +94,125 @@
     
     .keypad.active {
       transform: translateY(0);
+    }
+    
+    .tech-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0c4a6e 100%);
+      overflow: hidden;
+    }
+    
+    .tech-background::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(30, 144, 255, 0.05) 0%, transparent 50%);
+      animation: bgFloat 20s ease-in-out infinite;
+    }
+    
+    .tech-background::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        repeating-linear-gradient(0deg, rgba(59, 130, 246, 0.03) 0px, transparent 1px, transparent 2px, rgba(59, 130, 246, 0.03) 3px),
+        repeating-linear-gradient(90deg, rgba(59, 130, 246, 0.03) 0px, transparent 1px, transparent 2px, rgba(59, 130, 246, 0.03) 3px);
+      background-size: 100px 100px;
+      animation: bgShift 30s linear infinite;
+    }
+    
+    @keyframes bgFloat {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(30px, -30px); }
+    }
+    
+    @keyframes bgShift {
+      0% { background-position: 0 0; }
+      100% { background-position: 100px 100px; }
+    }
+    
+    .floating-shapes {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+    
+    .floating-shape {
+      position: absolute;
+      border: 2px solid rgba(59, 130, 246, 0.15);
+      opacity: 0.8;
+    }
+    
+    .shape-1 {
+      width: 150px;
+      height: 150px;
+      top: 10%;
+      left: 5%;
+      border-radius: 30%;
+      animation: float1 15s ease-in-out infinite;
+    }
+    
+    .shape-2 {
+      width: 200px;
+      height: 200px;
+      top: 60%;
+      right: 5%;
+      border-radius: 40%;
+      animation: float2 18s ease-in-out infinite;
+    }
+    
+    .shape-3 {
+      width: 100px;
+      height: 100px;
+      top: 30%;
+      right: 15%;
+      border-radius: 25%;
+      animation: float3 12s ease-in-out infinite;
+    }
+    
+    .shape-4 {
+      width: 120px;
+      height: 120px;
+      bottom: 15%;
+      left: 10%;
+      border-radius: 35%;
+      animation: float1 20s ease-in-out infinite;
+    }
+    
+    @keyframes float1 {
+      0%, 100% { transform: translateY(0px) translateX(0px); }
+      25% { transform: translateY(-20px) translateX(10px); }
+      50% { transform: translateY(-30px) translateX(-10px); }
+      75% { transform: translateY(-10px) translateX(20px); }
+    }
+    
+    @keyframes float2 {
+      0%, 100% { transform: translateY(0px) translateX(0px); }
+      33% { transform: translateY(25px) translateX(-15px); }
+      66% { transform: translateY(-15px) translateX(25px); }
+    }
+    
+    @keyframes float3 {
+      0%, 100% { transform: rotate(0deg) translateY(0px); }
+      50% { transform: rotate(180deg) translateY(-25px); }
     }
     
     .keypad-key {
@@ -111,16 +230,44 @@
       transform: scale(0.95);
     }
   </style>
+  <style id="keypad-key-colors">
+    .keypad-key {
+      background: #334155;
+      color: #e2e8f0;
+    }
+    
+    .keypad-key.bg-red-500 {
+      background: #dc2626;
+      color: white;
+    }
+    
+    .keypad-key.bg-blue-500 {
+      background: #2563eb;
+      color: white;
+    }
+    
+    .keypad-key.bg-slate-700 {
+      background: #334155;
+      color: #e2e8f0;
+    }
+  </style>
   <style>@view-transition { navigation: auto; }</style>
  </head>
  <body class="h-full">
+  <div class="tech-background"></div>
+  <div class="floating-shapes">
+   <div class="floating-shape shape-1"></div>
+   <div class="floating-shape shape-2"></div>
+   <div class="floating-shape shape-3"></div>
+   <div class="floating-shape shape-4"></div>
+  </div>
   <div id="app" class="h-full w-full overflow-auto"></div><!-- Virtual Keypad -->
   <div id="keypad" class="keypad">
    <div class="max-w-4xl mx-auto">
     <div class="flex justify-between items-center mb-3">
-     <div id="keypadTarget" class="text-white text-sm opacity-75"></div><button id="closeKeypad" class="px-4 py-2 rounded-lg bg-red-500 text-white font-bold"> Tutup ✕ </button>
+     <div id="keypadTarget" class="text-white text-sm opacity-75"></div><button id="closeKeypad" class="px-4 py-2 rounded-lg bg-red-600 text-white font-bold"> Tutup ✕ </button>
     </div>
-    <div class="grid grid-cols-10 gap-2"><button class="keypad-key bg-slate-700 text-white col-span-1" data-key="1">1</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="2">2</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="3">3</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="4">4</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="5">5</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="6">6</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="7">7</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="8">8</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="9">9</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="0">0</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="Q">Q</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="W">W</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="E">E</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="R">R</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="T">T</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="Y">Y</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="U">U</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="I">I</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="O">O</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="P">P</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="A">A</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="S">S</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="D">D</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="F">F</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="G">G</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="H">H</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="J">J</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="K">K</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="L">L</button> <button class="keypad-key bg-red-500 text-white col-span-1" data-key="Backspace">⌫</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="Z">Z</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="X">X</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="C">C</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="V">V</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="B">B</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="N">N</button> <button class="keypad-key bg-slate-700 text-white col-span-1" data-key="M">M</button> <button class="keypad-key bg-blue-500 text-white col-span-3" data-key=" ">SPASI</button>
+    <div class="grid grid-cols-10 gap-2"><button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="1">1</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="2">2</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="3">3</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="4">4</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="5">5</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="6">6</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="7">7</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="8">8</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="9">9</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="0">0</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="Q">Q</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="W">W</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="E">E</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="R">R</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="T">T</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="Y">Y</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="U">U</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="I">I</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="O">O</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="P">P</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="A">A</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="S">S</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="D">D</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="F">F</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="G">G</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="H">H</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="J">J</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="K">K</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="L">L</button> <button class="keypad-key bg-red-500 text-white col-span-1" data-key="Backspace">⌫</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="Z">Z</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="X">X</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="C">C</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="V">V</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="B">B</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="N">N</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="M">M</button> <button class="keypad-key bg-blue-500 text-white col-span-3" data-key=" ">SPASI</button>
     </div>
    </div>
   </div>
@@ -129,11 +276,11 @@
     const defaultConfig = {
       background_color: "#0f172a",
       surface_color: "#1e293b",
-      text_color: "#f1f5f9",
+      text_color: "#e2e8f0",
       primary_action_color: "#3b82f6",
-      secondary_action_color: "#10b981",
-      game_title: "Arena Pseudocode - Duel Logika",
-      game_subtitle: "Gim Edukasi Interaktif Berpikir Komputasional",
+      secondary_action_color: "#0ea5e9",
+      game_title: "Arena Pseudocode",
+    //  game_subtitle: "Tantangan Logika Perseorangan",
       play_button_text: "MULAI PERMAINAN",
       next_level_text: "Lanjut ke Level Berikutnya",
       font_family: "Inter",
@@ -143,24 +290,18 @@
     // Game State
     let gameState = {
       screen: 'opening',
-      player1Name: '',
-      player2Name: '',
+      playerName: '',
       currentLevel: 1,
       maxLevel: 5,
-      player1Score: 0,
-      player2Score: 0,
-      player1Blocks: [],
-      player2Blocks: [],
+      playerScore: 0,
+      playerBlocks: [],
       completedLevels: [],
       sessionId: '',
-      currentCases: null,
-      player1Submitted: false,
-      player2Submitted: false,
-      player1TimeLeft: 60,
-      player2TimeLeft: 60,
+      currentCase: null,
+      playerSubmitted: false,
+      playerTimeLeft: 60,
       timerInterval: null,
-      player1Result: '',
-      player2Result: ''
+      playerResult: ''
     };
     
     // Keypad State
@@ -178,7 +319,7 @@
       const keypadTarget = document.getElementById('keypadTarget');
       
       keypad.classList.add('active');
-      keypadTarget.textContent = `Mengetik: ${inputElement.placeholder || 'Input nama'}`;
+      keypadTarget.textContent = `${inputElement.placeholder || 'Input nama'}`;
       
       playSound('click');
     };
@@ -367,6 +508,16 @@
       return userBlocks.every((block, index) => block === correctSequence[index]);
     };
 
+    // Shuffle array function
+    const shuffleArray = (array) => {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    };
+
     // Timer Functions
     const startTimer = () => {
       if (gameState.timerInterval) {
@@ -374,31 +525,19 @@
       }
       
       gameState.timerInterval = setInterval(() => {
-        let needsUpdate = false;
-        
-        if (!gameState.player1Submitted && gameState.player1TimeLeft > 0) {
-          gameState.player1TimeLeft--;
-          needsUpdate = true;
+        if (!gameState.playerSubmitted && gameState.playerTimeLeft > 0) {
+          gameState.playerTimeLeft--;
           
-          if (gameState.player1TimeLeft === 0) {
-            handleTimeout(1);
+          if (gameState.playerTimeLeft === 0) {
+            handleTimeout();
+          }
+          
+          if (gameState.screen === 'gameplay') {
+            updateTimerDisplay();
           }
         }
         
-        if (!gameState.player2Submitted && gameState.player2TimeLeft > 0) {
-          gameState.player2TimeLeft--;
-          needsUpdate = true;
-          
-          if (gameState.player2TimeLeft === 0) {
-            handleTimeout(2);
-          }
-        }
-        
-        if (needsUpdate && gameState.screen === 'gameplay') {
-          updateTimerDisplay();
-        }
-        
-        if (gameState.player1Submitted && gameState.player2Submitted) {
+        if (gameState.playerSubmitted) {
           clearInterval(gameState.timerInterval);
         }
       }, 1000);
@@ -411,83 +550,36 @@
       }
     };
 
-    const handleTimeout = (player) => {
+    const handleTimeout = () => {
       playSound('timeout');
       
-      if (player === 1) {
-        gameState.player1Submitted = true;
-      } else {
-        gameState.player2Submitted = true;
-      }
+      gameState.playerSubmitted = true;
       
-      const submitBtn = document.querySelector(`.submit-btn[data-player="${player}"]`);
+      const submitBtn = document.querySelector('.submit-btn');
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = '⏰ Waktu Habis';
         submitBtn.style.opacity = '0.5';
       }
       
-      checkBothCompleted();
+      setTimeout(() => {
+        if (gameState.currentLevel === gameState.maxLevel) {
+          gameState.screen = 'final';
+        } else {
+          gameState.screen = 'levelComplete';
+        }
+        render();
+      }, 2000);
     };
 
     const updateTimerDisplay = () => {
-      const timer1 = document.getElementById('timer1');
-      const timer2 = document.getElementById('timer2');
+      const timer = document.getElementById('timer');
       
-      if (timer1 && !gameState.player1Submitted) {
-        timer1.textContent = `⏱️ ${gameState.player1TimeLeft}s`;
-        if (gameState.player1TimeLeft <= 10) {
-          timer1.style.color = '#ef4444';
+      if (timer && !gameState.playerSubmitted) {
+        timer.textContent = `⏱️ ${gameState.playerTimeLeft}s`;
+        if (gameState.playerTimeLeft <= 10) {
+          timer.style.color = '#ef4444';
         }
-      }
-      
-      if (timer2 && !gameState.player2Submitted) {
-        timer2.textContent = `⏱️ ${gameState.player2TimeLeft}s`;
-        if (gameState.player2TimeLeft <= 10) {
-          timer2.style.color = '#ef4444';
-        }
-      }
-    };
-
-    const checkBothCompleted = async () => {
-      if (gameState.player1Submitted && gameState.player2Submitted) {
-        stopTimer();
-        
-        if (!gameState.completedLevels.includes(gameState.currentLevel)) {
-          gameState.completedLevels.push(gameState.currentLevel);
-        }
-        
-        gameState.sessionId = gameState.sessionId || `session_${Date.now()}`;
-        
-        // Save data
-        if (window.dataSdk) {
-          const result = await window.dataSdk.create({
-            player1_name: gameState.player1Name,
-            player2_name: gameState.player2Name,
-            current_level: gameState.currentLevel,
-            player1_total_score: gameState.player1Score,
-            player2_total_score: gameState.player2Score,
-            completed_levels: gameState.completedLevels.join(','),
-            session_id: gameState.sessionId,
-            timestamp: new Date().toISOString()
-          });
-          
-          if (!result.isOk) {
-            console.error('Failed to save data');
-          }
-        }
-        
-        // Play victory sound after data is saved
-        playSound('complete');
-        
-        setTimeout(() => {
-          if (gameState.currentLevel === gameState.maxLevel) {
-            gameState.screen = 'final';
-          } else {
-            gameState.screen = 'levelComplete';
-          }
-          render();
-        }, 1500);
       }
     };
 
@@ -498,42 +590,17 @@
       const fontFamily = config.font_family || defaultConfig.font_family;
       
       return `
-        <div class="h-full flex items-center justify-center relative overflow-hidden" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
-          <!-- Tech Background Pattern -->
-          <svg class="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice">
-            <!-- Circuit Board Pattern -->
-            <line x1="0" y1="100" x2="200" y2="100" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <circle cx="200" cy="100" r="5" fill="${config.primary_action_color}"/>
-            <line x1="200" y1="100" x2="200" y2="200" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <line x1="200" y1="200" x2="350" y2="200" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <circle cx="350" cy="200" r="5" fill="${config.primary_action_color}"/>
-            
-            <line x1="800" y1="150" x2="650" y2="150" stroke="${config.secondary_action_color}" stroke-width="2"/>
-            <circle cx="650" cy="150" r="5" fill="${config.secondary_action_color}"/>
-            <line x1="650" y1="150" x2="650" y2="300" stroke="${config.secondary_action_color}" stroke-width="2"/>
-            <line x1="650" y1="300" x2="500" y2="300" stroke="${config.secondary_action_color}" stroke-width="2"/>
-            <circle cx="500" cy="300" r="5" fill="${config.secondary_action_color}"/>
-            
-            <line x1="100" y1="450" x2="250" y2="450" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <circle cx="250" cy="450" r="5" fill="${config.primary_action_color}"/>
-            <line x1="250" y1="450" x2="250" y2="550" stroke="${config.primary_action_color}" stroke-width="2"/>
-            
-            <line x1="900" y1="400" x2="750" y2="400" stroke="${config.secondary_action_color}" stroke-width="2"/>
-            <circle cx="750" cy="400" r="5" fill="${config.secondary_action_color}"/>
-            <line x1="750" y1="400" x2="750" y2="500" stroke="${config.secondary_action_color}" stroke-width="2"/>
-            
-            <!-- Code Symbols -->
-            <text x="50" y="250" fill="${config.primary_action_color}" font-size="24" opacity="0.3" font-family="monospace">&lt;/&gt;</text>
-            <text x="850" y="250" fill="${config.secondary_action_color}" font-size="24" opacity="0.3" font-family="monospace">{ }</text>
-            <text x="150" y="350" fill="${config.primary_action_color}" font-size="20" opacity="0.3" font-family="monospace">01010</text>
-            <text x="800" y="500" fill="${config.secondary_action_color}" font-size="20" opacity="0.3" font-family="monospace">10101</text>
-            
-            <!-- Geometric Tech Elements -->
-            <rect x="400" y="50" width="60" height="60" stroke="${config.primary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
-            <rect x="550" y="450" width="50" height="50" stroke="${config.secondary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
-            <polygon points="100,500 150,480 150,520" stroke="${config.primary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
-            <polygon points="900,100 880,150 920,150" stroke="${config.secondary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
-          </svg>
+        <div class="h-full flex items-center justify-center relative overflow-hidden" style="font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
+          <!-- Background Image -->
+          <img 
+            src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&h=1080&fit=crop&q=80" 
+            alt="Background" 
+            loading="lazy"
+            onerror="this.style.display='none';"
+            class="absolute inset-0 w-full h-full object-cover"
+          />
+          <!-- Dark Overlay -->
+          <div class="absolute inset-0 w-full h-full" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(30, 41, 59, 0.75) 100%);"></div>
           
           <div class="text-center fade-in px-8 relative z-10">
             <div class="mb-8">
@@ -564,7 +631,7 @@
               </svg>
             </div>
             <h1 class="mb-4" style="font-size: ${baseFontSize * 2.5}px; font-weight: 800; color: ${config.text_color};">
-              Arena <em>Pseudocode</em><br/>Duel Logika
+              Arena <em>Pseudocode</em><br/>Challenge Mode
             </h1>
             <p class="mb-12" style="font-size: ${baseFontSize * 1.125}px; color: ${config.text_color}; opacity: 0.8;">
               ${config.game_subtitle}
@@ -587,63 +654,38 @@
       const fontFamily = config.font_family || defaultConfig.font_family;
       
       return `
-        <div class="h-full flex" style="font-family: ${fontFamily}, system-ui, sans-serif;">
-          <!-- Player 1 Side -->
-          <div class="flex-1 flex items-center justify-center p-8" style="background: ${config.primary_action_color};">
-            <div class="w-full max-w-md fade-in p-8 rounded-2xl" style="background: rgba(255,255,255,0.95);">
-              <h2 class="text-center mb-8" style="font-size: ${baseFontSize * 2}px; font-weight: 700; color: ${config.primary_action_color};">
-                Pemain 1
-              </h2>
-              <div>
-                <label class="block mb-2" style="font-size: ${baseFontSize * 1.125}px; color: ${config.background_color};">
-                  Nama Kamu
-                </label>
-                <input 
-                  type="text" 
-                  id="player1Input" 
-                  class="w-full px-4 py-3 rounded-lg"
-                  style="background: white; color: ${config.background_color}; border: 2px solid ${config.primary_action_color}; font-size: ${baseFontSize}px;"
-                  placeholder="Masukkan nama pemain 1"
-                  readonly
-                />
-              </div>
+        <div class="h-full flex items-center justify-center p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
+          <div class="w-full max-w-md fade-in p-8 rounded-2xl" style="background: ${config.surface_color};">
+            <h2 class="text-center mb-8" style="font-size: ${baseFontSize * 2}px; font-weight: 700; color: ${config.text_color};">
+              Masukkan Nama Pemain
+            </h2>
+            <div>
+                  <input 
+                type="text" 
+                id="playerInput" 
+                class="w-full px-4 py-3 rounded-lg mb-8"
+                style="background: #334155; color: ${config.text_color}; border: 2px solid ${config.primary_action_color}; font-size: ${baseFontSize}px;"
+                placeholder="Masukkan nama pemain"
+                readonly
+              />
             </div>
-          </div>
-          
-          <!-- Divider -->
-          <div class="w-1" style="background: linear-gradient(to bottom, ${config.primary_action_color}, ${config.secondary_action_color});"></div>
-          
-          <!-- Player 2 Side -->
-          <div class="flex-1 flex items-center justify-center p-8" style="background: ${config.secondary_action_color};">
-            <div class="w-full max-w-md fade-in p-8 rounded-2xl" style="background: rgba(255,255,255,0.95);">
-              <h2 class="text-center mb-8" style="font-size: ${baseFontSize * 2}px; font-weight: 700; color: ${config.secondary_action_color};">
-                Pemain 2
-              </h2>
-              <div>
-                <label class="block mb-2" style="font-size: ${baseFontSize * 1.125}px; color: ${config.background_color};">
-                  Nama Kamu
-                </label>
-                <input 
-                  type="text" 
-                  id="player2Input" 
-                  class="w-full px-4 py-3 rounded-lg"
-                  style="background: white; color: ${config.background_color}; border: 2px solid ${config.secondary_action_color}; font-size: ${baseFontSize}px;"
-                  placeholder="Masukkan nama pemain 2"
-                  readonly
-                />
-              </div>
+            
+            <div class="flex gap-4">
+              <button 
+                id="backToHomeFromInput" 
+                class="flex-1 px-6 py-4 rounded-lg font-bold transition-all"
+                style="background: ${config.surface_color}; color: ${config.text_color}; font-size: ${baseFontSize}px; border: 2px solid ${config.text_color};"
+              >
+                ← Kembali
+              </button>
+              <button 
+                id="startGameBtn" 
+                class="flex-1 px-6 py-4 rounded-lg font-bold transition-all pulse-btn"
+                style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
+              >
+                Mulai
+              </button>
             </div>
-          </div>
-          
-          <!-- Start Button (Floating Center) -->
-          <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-            <button 
-              id="startGameBtn" 
-              class="px-12 py-4 rounded-full font-bold transition-all shadow-2xl pulse-btn"
-              style="background: ${config.background_color}; color: ${config.text_color}; font-size: ${baseFontSize * 1.25}px; border: 3px solid ${config.text_color};"
-            >
-              Mulai Permainan
-            </button>
           </div>
         </div>
       `;
@@ -655,143 +697,81 @@
       const fontFamily = config.font_family || defaultConfig.font_family;
       
       return `
-        <div class="h-full flex overflow-auto" style="font-family: ${fontFamily}, system-ui, sans-serif;">
-          <!-- Player 1 Side -->
-          <div class="flex-1 p-6 overflow-auto" style="background: ${config.primary_action_color};">
-            <div class="max-w-2xl mx-auto fade-in">
-              <div class="p-8 rounded-2xl mb-6" style="background: rgba(255,255,255,0.95);">
-                <div class="text-center mb-6">
-                  <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.primary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
-                    ${gameState.player1Name}
-                  </div>
-                  <h2 class="mb-4" style="font-size: ${baseFontSize * 1.75}px; font-weight: 700; color: ${config.primary_action_color};">
-                    Pengantar Materi
-                  </h2>
+        <div class="h-full overflow-auto p-6" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
+          <div class="max-w-2xl mx-auto fade-in">
+            <div class="p-8 rounded-2xl mb-6" style="background: ${config.surface_color};">
+              <div class="text-center mb-6">
+                <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.primary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
+                  ${gameState.playerName}
+                </div>
+                <h2 class="mb-4" style="font-size: ${baseFontSize * 1.75}px; font-weight: 700; color: ${config.text_color};">
+                  Pengantar Materi
+                </h2>
+              </div>
+              
+              <div class="space-y-6" style="color: ${config.text_color};">
+                <div>
+                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.primary_action_color};">
+                    🧠 Apa itu Algoritma?
+                  </h3>
+                  <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
+                    Algoritma adalah urutan langkah-langkah logis untuk menyelesaikan suatu masalah, seperti resep masakan. Setiap langkah harus berurutan dan jelas.
+                  </p>
                 </div>
                 
-                <div class="space-y-6" style="color: ${config.background_color};">
-                  <div>
-                    <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.primary_action_color};">
-                      🧠 Apa itu Algoritma?
-                    </h3>
-                    <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
-                      Algoritma adalah urutan langkah-langkah logis untuk menyelesaikan suatu masalah, seperti resep masakan. Setiap langkah harus berurutan dan jelas.
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.primary_action_color};">
-                      📝 Apa itu <em>Pseudocode</em>?
-                    </h3>
-                    <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
-                      <em style="font-style: italic;">Pseudocode</em> adalah cara menulis algoritma dengan bahasa sederhana yang mudah dipahami manusia, tetapi mengikuti struktur logika pemrograman.
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.primary_action_color};">
-                      🔢 Variabel dan Operasi
-                    </h3>
-                    <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6; margin-bottom: 8px;">
-                      <strong>Variabel</strong> adalah tempat menyimpan data. Contoh: harga = 5000
-                    </p>
-                    <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
-                      <strong>Operasi Matematika:</strong> penjumlahan (+), pengurangan (-), perkalian (*), pembagian (/)
-                    </p>
-                  </div>
-                  
-                  <div class="p-4 rounded-lg" style="background: ${config.primary_action_color}; color: white;">
-                    <h3 class="mb-3" style="font-size: ${baseFontSize * 1.125}px; font-weight: 600;">
-                      ✨ Contoh <em style="font-style: italic;">Pseudocode</em>
-                    </h3>
-                    <div class="space-y-2" style="font-size: ${baseFontSize * 0.8125}px; font-family: 'Courier New', monospace;">
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Mulai</div>
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">harga_buku = 25000</div>
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">harga_pensil = 5000</div>
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">total = harga_buku + harga_pensil</div>
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Tampilkan total</div>
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Selesai</div>
-                    </div>
+                <div>
+                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.primary_action_color};">
+                    💻 Apa itu <em>Pseudocode</em>?
+                  </h3>
+                  <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
+                    <em style="font-style: italic;">Pseudocode</em> adalah cara menulis algoritma dengan bahasa sederhana yang mudah dipahami manusia, tetapi mengikuti struktur logika pemrograman.
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.primary_action_color};">
+                    🔢 Variabel dan Operasi
+                  </h3>
+                  <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6; margin-bottom: 8px;">
+                    <strong>Variabel</strong> adalah tempat menyimpan data. Contoh: harga = 5000
+                  </p>
+                  <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
+                    <strong>Operasi Matematika:</strong> penjumlahan (+), pengurangan (-), perkalian (*), pembagian (/)
+                  </p>
+                </div>
+                
+                <div class="p-4 rounded-lg" style="background: ${config.primary_action_color}; color: white;">
+                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.125}px; font-weight: 600;">
+                    ✨ Contoh <em style="font-style: italic;">Pseudocode</em>
+                  </h3>
+                  <div class="space-y-2" style="font-size: ${baseFontSize * 0.8125}px; font-family: 'Courier New', monospace;">
+                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Mulai</div>
+                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">harga_buku = 25000</div>
+                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">harga_pensil = 5000</div>
+                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">total = harga_buku + harga_pensil</div>
+                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Tampilkan total</div>
+                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Selesai</div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <!-- Divider -->
-          <div class="w-1" style="background: linear-gradient(to bottom, ${config.primary_action_color}, ${config.secondary_action_color});"></div>
-          
-          <!-- Player 2 Side -->
-          <div class="flex-1 p-6 overflow-auto" style="background: ${config.secondary_action_color};">
-            <div class="max-w-2xl mx-auto fade-in">
-              <div class="p-8 rounded-2xl mb-6" style="background: rgba(255,255,255,0.95);">
-                <div class="text-center mb-6">
-                  <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.secondary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
-                    ${gameState.player2Name}
-                  </div>
-                  <h2 class="mb-4" style="font-size: ${baseFontSize * 1.75}px; font-weight: 700; color: ${config.secondary_action_color};">
-                    Pengantar Materi
-                  </h2>
-                </div>
-                
-                <div class="space-y-6" style="color: ${config.background_color};">
-                  <div>
-                    <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.secondary_action_color};">
-                      🧠 Apa itu Algoritma?
-                    </h3>
-                    <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
-                      Algoritma adalah urutan langkah-langkah logis untuk menyelesaikan suatu masalah, seperti resep masakan. Setiap langkah harus berurutan dan jelas.
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.secondary_action_color};">
-                      📝 Apa itu <em>Pseudocode</em>?
-                    </h3>
-                    <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
-                      <em style="font-style: italic;">Pseudocode</em> adalah cara menulis algoritma dengan bahasa sederhana yang mudah dipahami manusia, tetapi mengikuti struktur logika pemrograman.
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.secondary_action_color};">
-                      🔢 Variabel dan Operasi
-                    </h3>
-                    <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6; margin-bottom: 8px;">
-                      <strong>Variabel</strong> adalah tempat menyimpan data. Contoh: harga = 5000
-                    </p>
-                    <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
-                      <strong>Operasi Matematika:</strong> penjumlahan (+), pengurangan (-), perkalian (*), pembagian (/)
-                    </p>
-                  </div>
-                  
-                  <div class="p-4 rounded-lg" style="background: ${config.secondary_action_color}; color: white;">
-                    <h3 class="mb-3" style="font-size: ${baseFontSize * 1.125}px; font-weight: 600;">
-                      ✨ Contoh <em style="font-style: italic;">Pseudocode</em>
-                    </h3>
-                    <div class="space-y-2" style="font-size: ${baseFontSize * 0.8125}px; font-family: 'Courier New', monospace;">
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Mulai</div>
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">harga_buku = 25000</div>
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">harga_pensil = 5000</div>
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">total = harga_buku + harga_pensil</div>
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Tampilkan total</div>
-                      <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Selesai</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            
+            <div class="flex gap-4 justify-center">
+              <button 
+                id="backToHomeFromIntro" 
+                class="px-8 py-4 rounded-full font-bold transition-all"
+                style="background: ${config.surface_color}; color: ${config.text_color}; font-size: ${baseFontSize}px; border: 2px solid ${config.text_color};"
+              >
+                ← Kembali
+              </button>
+              <button 
+                id="startChallengeBtn" 
+                class="px-8 py-4 rounded-full font-bold transition-all pulse-btn"
+                style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
+              >
+                Mulai Tantangan
+              </button>
             </div>
-          </div>
-          
-          <!-- Start Button (Floating Center) -->
-          <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-            <button 
-              id="startChallengeBtn" 
-              class="px-12 py-4 rounded-full font-bold transition-all shadow-2xl pulse-btn"
-              style="background: ${config.background_color}; color: ${config.text_color}; font-size: ${baseFontSize * 1.25}px; border: 3px solid ${config.text_color};"
-            >
-              Mulai Tantangan
-            </button>
           </div>
         </div>
       `;
@@ -833,20 +813,60 @@
       }
       
       return `
-        <div class="h-full overflow-auto p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
-          <div class="max-w-6xl mx-auto fade-in">
-            <h2 class="text-center mb-8" style="font-size: ${baseFontSize * 2.5}px; font-weight: 800; color: ${config.text_color};">
-              Peta Arena
-            </h2>
+        <div class="h-full overflow-auto p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
+          <!-- Tech Circuit Background -->
+          <svg class="absolute inset-0 w-full h-full" style="z-index: 0; opacity: 0.15; pointer-events: none;" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+            <!-- Vertical lines -->
+            <line x1="100" y1="0" x2="100" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <line x1="300" y1="0" x2="300" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <line x1="500" y1="0" x2="500" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <line x1="700" y1="0" x2="700" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <line x1="900" y1="0" x2="900" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <line x1="1100" y1="0" x2="1100" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
+            
+            <!-- Horizontal lines -->
+            <line x1="0" y1="100" x2="1200" y2="100" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <line x1="0" y1="300" x2="1200" y2="300" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <line x1="0" y1="500" x2="1200" y2="500" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <line x1="0" y1="700" x2="1200" y2="700" stroke="${config.primary_action_color}" stroke-width="2"/>
+            
+            <!-- Circuit nodes -->
+            <circle cx="100" cy="100" r="8" fill="${config.primary_action_color}"/>
+            <circle cx="300" cy="200" r="6" fill="${config.primary_action_color}"/>
+            <circle cx="500" cy="150" r="7" fill="${config.primary_action_color}"/>
+            <circle cx="700" cy="300" r="6" fill="${config.primary_action_color}"/>
+            <circle cx="900" cy="250" r="8" fill="${config.primary_action_color}"/>
+            <circle cx="1100" cy="400" r="7" fill="${config.primary_action_color}"/>
+            
+            <circle cx="150" cy="500" r="6" fill="${config.primary_action_color}"/>
+            <circle cx="450" cy="600" r="7" fill="${config.primary_action_color}"/>
+            <circle cx="750" cy="550" r="6" fill="${config.primary_action_color}"/>
+            <circle cx="950" cy="700" r="8" fill="${config.primary_action_color}"/>
+          </svg>
+          
+          <div class="max-w-6xl mx-auto fade-in relative" style="z-index: 2;">
+            <div class="flex justify-between items-center mb-8">
+              <button 
+                id="backToHomeFromMap" 
+                class="px-6 py-3 rounded-lg font-bold transition-all"
+                style="background: ${config.surface_color}; color: ${config.text_color}; font-size: ${baseFontSize}px; border: 2px solid ${config.text_color};"
+              >
+                ← Halaman Awal
+              </button>
+              <h2 class="text-center" style="font-size: ${baseFontSize * 2.5}px; font-weight: 800; color: ${config.text_color};">
+                Peta Level
+              </h2>
+              <div style="width: 150px;"></div>
+            </div>
             <div class="grid grid-cols-5 gap-6 mb-8">
               ${levelsHTML}
             </div>
             <div class="text-center p-6 rounded-xl" style="background: ${config.surface_color}; color: ${config.text_color};">
               <p style="font-size: ${baseFontSize * 1.125}px;">
-                <strong>${gameState.player1Name}</strong> vs <strong>${gameState.player2Name}</strong>
+                <strong>${gameState.playerName}</strong>
               </p>
               <p class="mt-2" style="font-size: ${baseFontSize}px; opacity: 0.8;">
-                Skor: ${gameState.player1Score} - ${gameState.player2Score}
+                Skor: ${gameState.playerScore}
               </p>
             </div>
           </div>
@@ -859,101 +879,130 @@
       const baseFontSize = config.font_size || defaultConfig.font_size;
       const fontFamily = config.font_family || defaultConfig.font_family;
       
-      const cases = gameState.currentCases;
+      const caseData = gameState.currentCase;
+      const playerBlocks = gameState.playerBlocks;
       
-      const renderPlayerPanel = (playerNum, caseData) => {
-        const playerColor = playerNum === 1 ? config.primary_action_color : config.secondary_action_color;
-        const playerName = playerNum === 1 ? gameState.player1Name : gameState.player2Name;
-        const playerBlocks = playerNum === 1 ? gameState.player1Blocks : gameState.player2Blocks;
-        
-        let availableBlocksHTML = caseData.availableBlocks.map((block, index) => `
-          <div 
-            class="drag-block p-3 rounded-lg mb-2 cursor-move"
-            style="background: ${config.surface_color}; color: ${config.text_color}; border: 2px solid ${playerColor}; font-size: ${baseFontSize * 0.875}px;"
-            draggable="true"
-            data-player="${playerNum}"
-            data-block="${block}"
-          >
-            ${block}
-          </div>
-        `).join('');
-        
-        let constructedBlocksHTML = playerBlocks.map((block, index) => `
-          <div 
-            class="p-3 rounded-lg mb-2"
-            style="background: ${playerColor}; color: ${config.background_color}; font-size: ${baseFontSize * 0.875}px;"
+      let availableBlocksHTML = shuffleArray(caseData.availableBlocks).map((block, index) => `
+        <div 
+          class="drag-block p-3 rounded-lg mb-2 cursor-move"
+          style="background: ${config.surface_color}; color: ${config.text_color}; border: 2px solid ${config.primary_action_color}; font-size: ${baseFontSize * 0.875}px;"
+          draggable="true"
+          data-block="${block}"
+        >
+          ${block}
+        </div>
+      `).join('');
+      
+      let constructedBlocksHTML = playerBlocks.map((block, index) => `
+        <div 
+          class="flex items-center justify-between p-3 rounded-lg mb-2"
+          style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize * 0.875}px;"
+          data-index="${index}"
+        >
+          <span>${block}</span>
+          <button 
+            class="delete-block-btn ml-2 px-2 py-1 rounded transition-all"
             data-index="${index}"
+            style="background: rgba(255,255,255,0.2); color: ${config.background_color}; border: none; cursor: pointer; font-weight: bold; font-size: ${baseFontSize * 0.75}px;"
           >
-            ${block}
-          </div>
-        `).join('');
-        
-        return `
-          <div class="flex-1 p-4 rounded-xl" style="background: ${config.surface_color};">
-            <div class="mb-4 p-4 rounded-lg text-center" style="background: ${playerColor}; color: ${config.background_color};">
-              <h3 style="font-size: ${baseFontSize * 1.5}px; font-weight: 700;">${playerName}</h3>
-              <div id="timer${playerNum}" class="mt-2" style="font-size: ${baseFontSize * 1.125}px; font-weight: 600;">
-                ⏱️ ${playerNum === 1 ? gameState.player1TimeLeft : gameState.player2TimeLeft}s
+            ✕
+          </button>
+        </div>
+      `).join('');
+      
+      return `
+        <div class="h-full overflow-auto p-6" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
+          <!-- Code Editor Background SVG -->
+          <svg class="absolute inset-0 w-full h-full" style="z-index: 0; opacity: 0.08; pointer-events: none;" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice">
+            <!-- Left sidebar -->
+            <rect x="0" y="0" width="200" height="900" fill="none" stroke="${config.primary_action_color}" stroke-width="1"/>
+            <!-- File icons -->
+            <rect x="20" y="30" width="160" height="30" rx="4" fill="none" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <rect x="20" y="75" width="160" height="30" rx="4" fill="none" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.6"/>
+            <rect x="20" y="120" width="160" height="30" rx="4" fill="none" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.4"/>
+            
+            <!-- Main editor area with code lines -->
+            <line x1="220" y1="0" x2="220" y2="900" stroke="${config.primary_action_color}" stroke-width="2"/>
+            <!-- Code line numbers -->
+            <text x="230" y="50" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">1</text>
+            <text x="230" y="80" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">2</text>
+            <text x="230" y="110" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">3</text>
+            <text x="230" y="140" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">4</text>
+            <text x="230" y="170" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">5</text>
+            <text x="230" y="200" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">6</text>
+            
+            <!-- Code structure -->
+            <line x1="270" y1="40" x2="600" y2="40" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.4"/>
+            <line x1="270" y1="75" x2="650" y2="75" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.5"/>
+            <line x1="270" y1="110" x2="700" y2="110" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.4"/>
+            <line x1="270" y1="145" x2="550" y2="145" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.5"/>
+            <line x1="270" y1="180" x2="620" y2="180" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.4"/>
+            <line x1="270" y1="215" x2="680" y2="215" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.5"/>
+            
+            <!-- Bracket pairs -->
+            <path d="M 250 250 L 260 250 L 260 350 L 250 350" stroke="${config.primary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
+            <path d="M 1150 250 L 1140 250 L 1140 350 L 1150 350" stroke="${config.primary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
+            
+            <!-- Terminal section -->
+            <line x1="0" y1="500" x2="1200" y2="500" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.3"/>
+            <text x="20" y="530" font-family="monospace" font-size="12" fill="${config.primary_action_color}" opacity="0.4">$ Terminal</text>
+            <line x1="20" y1="545" x2="1180" y2="545" stroke="${config.primary_action_color}" stroke-width="1" opacity="0.2" stroke-dasharray="5,5"/>
+            
+            <!-- Status bar -->
+            <line x1="0" y1="870" x2="1200" y2="870" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.3"/>
+            <text x="20" y="890" font-family="monospace" font-size="11" fill="${config.primary_action_color}" opacity="0.4">Line 6, Column 24</text>
+          </svg>
+          
+          <div class="max-w-4xl mx-auto fade-in relative" style="z-index: 2;">
+            <div class="mb-4 p-4 rounded-lg text-center" style="background: ${config.primary_action_color}; color: ${config.background_color};">
+              <h3 style="font-size: ${baseFontSize * 1.5}px; font-weight: 700;">${gameState.playerName}</h3>
+              <div id="timer" class="mt-2" style="font-size: ${baseFontSize * 1.125}px; font-weight: 600;">
+                ⏱️ ${gameState.playerTimeLeft}s
               </div>
             </div>
             
-            <div class="mb-4 p-4 rounded-lg" style="background: ${config.background_color}; color: ${config.text_color};">
+            <div class="mb-4 p-4 rounded-lg" style="background: ${config.surface_color}; color: ${config.text_color};">
               <h4 style="font-size: ${baseFontSize * 1.125}px; font-weight: 600; margin-bottom: 8px;">${caseData.title}</h4>
               <p style="font-size: ${baseFontSize * 0.875}px; opacity: 0.9;">${caseData.description}</p>
             </div>
             
-            <div class="mb-4">
-              <h4 class="mb-2" style="font-size: ${baseFontSize}px; font-weight: 600; color: ${config.text_color};">
-                Blok Tersedia:
-              </h4>
-              <div class="available-blocks-${playerNum}" style="max-height: 200px; overflow-y: auto;">
-                ${availableBlocksHTML}
+            <div class="grid grid-cols-2 gap-6">
+              <div>
+                <h4 class="mb-2" style="font-size: ${baseFontSize}px; font-weight: 600; color: ${config.text_color};">
+                  Blok Tersedia:
+                </h4>
+                <div class="available-blocks" style="max-height: 400px; overflow-y: auto;">
+                  ${availableBlocksHTML}
+                </div>
+              </div>
+              
+              <div>
+                <h4 class="mb-2" style="font-size: ${baseFontSize}px; font-weight: 600; color: ${config.text_color};">
+                  <em style="font-style: italic;">Pseudocode</em> Kamu:
+                </h4>
+                <div 
+                  class="drop-zone constructed-blocks p-4"
+                  style="background: ${config.surface_color}; min-height: 400px;"
+                >
+                  ${constructedBlocksHTML.length > 0 ? constructedBlocksHTML : `<p style="color: ${config.text_color}; opacity: 0.5; font-size: ${baseFontSize * 0.875}px;">Seret blok ke sini...</p>`}
+                </div>
               </div>
             </div>
             
-            <div>
-              <h4 class="mb-2" style="font-size: ${baseFontSize}px; font-weight: 600; color: ${config.text_color};">
-                <em style="font-style: italic;">Pseudocode</em> Kamu:
-              </h4>
-              <div 
-                class="drop-zone constructed-blocks-${playerNum} p-4"
-                data-player="${playerNum}"
-                style="background: ${config.background_color}; min-height: 300px;"
-              >
-                ${constructedBlocksHTML.length > 0 ? constructedBlocksHTML : `<p style="color: ${config.text_color}; opacity: 0.5; font-size: ${baseFontSize * 0.875}px;">Seret blok ke sini...</p>`}
-              </div>
-            </div>
-            
-            <div class="mt-4 flex gap-2">
+            <div class="mt-6 flex gap-2">
               <button 
                 class="reset-btn flex-1 py-3 rounded-lg font-bold transition-all"
-                data-player="${playerNum}"
-                style="background: ${config.background_color}; color: ${config.text_color}; border: 2px solid ${playerColor}; font-size: ${baseFontSize}px;"
+                style="background: ${config.surface_color}; color: ${config.text_color}; border: 2px solid ${config.primary_action_color}; font-size: ${baseFontSize}px;"
               >
                 Reset
               </button>
               <button 
                 class="submit-btn flex-1 py-3 rounded-lg font-bold transition-all"
-                data-player="${playerNum}"
-                style="background: ${playerColor}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
+                style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
               >
                 Selesai
               </button>
             </div>
-          </div>
-        `;
-      };
-      
-      return `
-        <div class="h-full overflow-auto p-6" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif;">
-          <div class="mb-4 text-center" style="color: ${config.text_color};">
-            <h2 style="font-size: ${baseFontSize * 2}px; font-weight: 700;">Level ${gameState.currentLevel}</h2>
-            <p style="font-size: ${baseFontSize}px; opacity: 0.8;">Susun <em style="font-style: italic;">pseudocode</em> dengan benar!</p>
-          </div>
-          
-          <div class="flex gap-6 mb-4">
-            ${renderPlayerPanel(1, cases[0])}
-            ${renderPlayerPanel(2, cases[1])}
           </div>
         </div>
       `;
@@ -967,97 +1016,56 @@
       const isLastLevel = gameState.currentLevel === gameState.maxLevel;
       
       return `
-        <div class="h-full flex" style="font-family: ${fontFamily}, system-ui, sans-serif;">
-          <!-- Player 1 Side -->
-          <div class="flex-1 flex items-center justify-center p-8" style="background: ${config.primary_action_color};">
-            <div class="w-full max-w-md fade-in p-8 rounded-2xl text-center" style="background: rgba(255,255,255,0.95);">
-              <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.primary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
-                ${gameState.player1Name}
-              </div>
-              <div class="text-6xl mb-6">${gameState.player1Result === 'correct' ? '🎉' : '😔'}</div>
-              <h2 class="mb-6" style="font-size: ${baseFontSize * 1.75}px; font-weight: 700; color: ${config.primary_action_color};">
-                Level ${gameState.currentLevel} Selesai!
-              </h2>
-              
-              <div class="mb-6">
-                <div class="p-6 rounded-lg" style="background: ${config.primary_action_color}; color: white;">
-                  <p style="font-size: ${baseFontSize * 0.875}px; margin-bottom: 4px;">Skor Kamu</p>
-                  <p style="font-size: ${baseFontSize * 2.5}px; font-weight: 800;">
-                    ${gameState.player1Score}
-                  </p>
-                  <p style="font-size: ${baseFontSize * 0.875}px; margin-top: 4px; opacity: 0.9;">poin</p>
-                </div>
-              </div>
-              
-              <div class="p-4 rounded-lg mb-4" style="background: ${gameState.player1Result === 'correct' ? '#10b981' : '#ef4444'}; color: white;">
-                <p style="font-size: ${baseFontSize}px; font-weight: 600; margin-bottom: 8px;">
-                  ${gameState.player1Result === 'correct' ? '✓ Jawaban Benar!' : '✗ Jawaban Salah'}
-                </p>
-                <p style="font-size: ${baseFontSize * 0.875}px; opacity: 0.95;">
-                  ${gameState.player1Result === 'correct' 
-                    ? 'Hebat! Kamu berhasil menyusun pseudocode dengan tepat. Algoritma yang kamu buat sudah benar dan logis!' 
-                    : 'Jangan menyerah! Coba perhatikan lagi urutan langkah-langkahnya. Setiap blok harus disusun secara logis dan berurutan.'}
-                </p>
-              </div>
+        <div class="h-full flex items-center justify-center p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
+          <div class="w-full max-w-lg fade-in p-8 rounded-2xl text-center" style="background: ${config.surface_color};">
+            <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.primary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
+              ${gameState.playerName}
             </div>
-          </div>
-          
-          <!-- Divider -->
-          <div class="w-1" style="background: linear-gradient(to bottom, ${config.primary_action_color}, ${config.secondary_action_color});"></div>
-          
-          <!-- Player 2 Side -->
-          <div class="flex-1 flex items-center justify-center p-8" style="background: ${config.secondary_action_color};">
-            <div class="w-full max-w-md fade-in p-8 rounded-2xl text-center" style="background: rgba(255,255,255,0.95);">
-              <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.secondary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
-                ${gameState.player2Name}
-              </div>
-              <div class="text-6xl mb-6">${gameState.player2Result === 'correct' ? '🎉' : '😔'}</div>
-              <h2 class="mb-6" style="font-size: ${baseFontSize * 1.75}px; font-weight: 700; color: ${config.secondary_action_color};">
-                Level ${gameState.currentLevel} Selesai!
-              </h2>
-              
-              <div class="mb-6">
-                <div class="p-6 rounded-lg" style="background: ${config.secondary_action_color}; color: white;">
-                  <p style="font-size: ${baseFontSize * 0.875}px; margin-bottom: 4px;">Skor Kamu</p>
-                  <p style="font-size: ${baseFontSize * 2.5}px; font-weight: 800;">
-                    ${gameState.player2Score}
-                  </p>
-                  <p style="font-size: ${baseFontSize * 0.875}px; margin-top: 4px; opacity: 0.9;">poin</p>
-                </div>
-              </div>
-              
-              <div class="p-4 rounded-lg mb-4" style="background: ${gameState.player2Result === 'correct' ? '#10b981' : '#ef4444'}; color: white;">
-                <p style="font-size: ${baseFontSize}px; font-weight: 600; margin-bottom: 8px;">
-                  ${gameState.player2Result === 'correct' ? '✓ Jawaban Benar!' : '✗ Jawaban Salah'}
-                </p>
-                <p style="font-size: ${baseFontSize * 0.875}px; opacity: 0.95;">
-                  ${gameState.player2Result === 'correct' 
-                    ? 'Hebat! Kamu berhasil menyusun pseudocode dengan tepat. Algoritma yang kamu buat sudah benar dan logis!' 
-                    : 'Jangan menyerah! Coba perhatikan lagi urutan langkah-langkahnya. Setiap blok harus disusun secara logis dan berurutan.'}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Navigation Buttons (Floating Center) -->
-          <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4">
-            ${!isLastLevel ? `
-              <button 
-                id="nextLevelBtn" 
-                class="px-8 py-4 rounded-full font-bold transition-all shadow-2xl"
-                style="background: ${config.background_color}; color: ${config.text_color}; font-size: ${baseFontSize * 1.125}px; border: 3px solid ${config.text_color};"
-              >
-                ${config.next_level_text}
-              </button>
-            ` : ''}
+            <div class="text-6xl mb-6">${gameState.playerResult === 'correct' ? '��' : '😔'}</div>
+            <h2 class="mb-6" style="font-size: ${baseFontSize * 1.75}px; font-weight: 700; color: ${config.text_color};">
+              Level ${gameState.currentLevel} Selesai!
+            </h2>
             
-            <button 
-              id="backToMapBtn" 
-              class="px-8 py-4 rounded-full font-bold transition-all shadow-2xl"
-              style="background: white; color: ${config.background_color}; font-size: ${baseFontSize * 1.125}px; border: 3px solid ${config.background_color};"
-            >
-              Kembali ke Peta Level
-            </button>
+            <div class="mb-6">
+              <div class="p-6 rounded-lg" style="background: ${config.primary_action_color}; color: white;">
+                <p style="font-size: ${baseFontSize * 0.875}px; margin-bottom: 4px;">Skor Kamu</p>
+                <p style="font-size: ${baseFontSize * 2.5}px; font-weight: 800;">
+                  ${gameState.playerScore}
+                </p>
+                <p style="font-size: ${baseFontSize * 0.875}px; margin-top: 4px; opacity: 0.9;">poin</p>
+              </div>
+            </div>
+            
+            <div class="p-4 rounded-lg mb-4" style="background: ${gameState.playerResult === 'correct' ? '#059669' : '#dc2626'}; color: white;">
+              <p style="font-size: ${baseFontSize}px; font-weight: 600; margin-bottom: 8px;">
+                ${gameState.playerResult === 'correct' ? '✓ Jawaban Benar!' : '✗ Jawaban Salah'}
+              </p>
+              <p style="font-size: ${baseFontSize * 0.875}px; opacity: 0.95;">
+                ${gameState.playerResult === 'correct' 
+                  ? 'Hebat! Kamu berhasil menyusun pseudocode dengan tepat. Algoritma yang kamu buat sudah benar dan logis!' 
+                  : 'Jangan menyerah! Coba perhatikan lagi urutan langkah-langkahnya. Setiap blok harus disusun secara logis dan berurutan.'}
+              </p>
+            </div>
+            
+            <div class="flex gap-4">
+              ${!isLastLevel ? `
+                <button 
+                  id="nextLevelBtn" 
+                  class="flex-1 px-6 py-4 rounded-lg font-bold transition-all"
+                  style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
+                >
+                  ${config.next_level_text}
+                </button>
+              ` : ''}
+              
+              <button 
+                id="backToMapBtn" 
+                class="flex-1 px-6 py-4 rounded-lg font-bold transition-all"
+                style="background: ${config.surface_color}; color: ${config.text_color}; font-size: ${baseFontSize}px; border: 2px solid ${config.text_color};"
+              >
+                Kembali ke Peta
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -1068,109 +1076,50 @@
       const baseFontSize = config.font_size || defaultConfig.font_size;
       const fontFamily = config.font_family || defaultConfig.font_family;
       
-      const player1Won = gameState.player1Score > gameState.player2Score;
-      const player2Won = gameState.player2Score > gameState.player1Score;
-      const isTie = gameState.player1Score === gameState.player2Score;
-      
       return `
-        <div class="h-full flex" style="font-family: ${fontFamily}, system-ui, sans-serif;">
-          <!-- Player 1 Side -->
-          <div class="flex-1 flex items-center justify-center p-8" style="background: ${config.primary_action_color};">
-            <div class="w-full max-w-lg fade-in p-8 rounded-2xl text-center" style="background: rgba(255,255,255,0.95);">
-              <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.primary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
-                ${gameState.player1Name}
-              </div>
-              
-              <div class="text-6xl mb-6">
-                ${player1Won ? '🏆' : isTie ? '🤝' : '👏'}
-              </div>
-              
-              <h2 class="mb-6" style="font-size: ${baseFontSize * 2}px; font-weight: 800; color: ${config.primary_action_color};">
-                ${player1Won ? 'Kamu Menang!' : isTie ? 'Seri!' : 'Tetap Semangat!'}
-              </h2>
-              
-              <div class="mb-8 p-6 rounded-xl" style="background: ${config.primary_action_color}; color: white;">
-                <p style="font-size: ${baseFontSize}px; margin-bottom: 8px; opacity: 0.9;">Total Skor</p>
-                <p style="font-size: ${baseFontSize * 3}px; font-weight: 800;">
-                  ${gameState.player1Score}
-                </p>
-                <p style="font-size: ${baseFontSize}px; margin-top: 8px; opacity: 0.9;">poin</p>
-              </div>
-              
-              ${player1Won ? `
-                <p style="font-size: ${baseFontSize}px; color: ${config.background_color}; font-weight: 600;">
-                  Hebat! Kamu adalah juara! 🎉
-                </p>
-              ` : isTie ? `
-                <p style="font-size: ${baseFontSize}px; color: ${config.background_color}; font-weight: 600;">
-                  Permainan yang seru! Kalian sama-sama hebat! 👍
-                </p>
-              ` : `
-                <p style="font-size: ${baseFontSize}px; color: ${config.background_color}; font-weight: 600;">
-                  Kamu sudah berusaha dengan baik! 💪
-                </p>
-              `}
+        <div class="h-full flex items-center justify-center p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
+          <div class="w-full max-w-lg fade-in p-8 rounded-2xl text-center" style="background: ${config.surface_color};">
+            <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.primary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
+              ${gameState.playerName}
             </div>
-          </div>
-          
-          <!-- Divider -->
-          <div class="w-1" style="background: linear-gradient(to bottom, ${config.primary_action_color}, ${config.secondary_action_color});"></div>
-          
-          <!-- Player 2 Side -->
-          <div class="flex-1 flex items-center justify-center p-8" style="background: ${config.secondary_action_color};">
-            <div class="w-full max-w-lg fade-in p-8 rounded-2xl text-center" style="background: rgba(255,255,255,0.95);">
-              <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.secondary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
-                ${gameState.player2Name}
-              </div>
-              
-              <div class="text-6xl mb-6">
-                ${player2Won ? '🏆' : isTie ? '🤝' : '👏'}
-              </div>
-              
-              <h2 class="mb-6" style="font-size: ${baseFontSize * 2}px; font-weight: 800; color: ${config.secondary_action_color};">
-                ${player2Won ? 'Kamu Menang!' : isTie ? 'Seri!' : 'Tetap Semangat!'}
-              </h2>
-              
-              <div class="mb-8 p-6 rounded-xl" style="background: ${config.secondary_action_color}; color: white;">
-                <p style="font-size: ${baseFontSize}px; margin-bottom: 8px; opacity: 0.9;">Total Skor</p>
-                <p style="font-size: ${baseFontSize * 3}px; font-weight: 800;">
-                  ${gameState.player2Score}
-                </p>
-                <p style="font-size: ${baseFontSize}px; margin-top: 8px; opacity: 0.9;">poin</p>
-              </div>
-              
-              ${player2Won ? `
-                <p style="font-size: ${baseFontSize}px; color: ${config.background_color}; font-weight: 600;">
-                  Hebat! Kamu adalah juara! 🎉
-                </p>
-              ` : isTie ? `
-                <p style="font-size: ${baseFontSize}px; color: ${config.background_color}; font-weight: 600;">
-                  Permainan yang seru! Kalian sama-sama hebat! 👍
-                </p>
-              ` : `
-                <p style="font-size: ${baseFontSize}px; color: ${config.background_color}; font-weight: 600;">
-                  Kamu sudah berusaha dengan baik! 💪
-                </p>
-              `}
+            
+            <div class="text-6xl mb-6">🏆</div>
+            
+            <h2 class="mb-6" style="font-size: ${baseFontSize * 2}px; font-weight: 800; color: ${config.text_color};">
+              Permainan Selesai!
+            </h2>
+            
+            <div class="mb-8 p-6 rounded-xl" style="background: ${config.primary_action_color}; color: white;">
+              <p style="font-size: ${baseFontSize}px; margin-bottom: 8px; opacity: 0.9;">Total Skor Final</p>
+              <p style="font-size: ${baseFontSize * 3}px; font-weight: 800;">
+                ${gameState.playerScore}
+              </p>
+              <p style="font-size: ${baseFontSize}px; margin-top: 8px; opacity: 0.9;">poin</p>
             </div>
-          </div>
-          
-          <!-- Navigation Buttons (Floating Center) -->
-          <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4">
-            <button 
-              id="newGameBtn" 
-              class="px-8 py-4 rounded-full font-bold transition-all shadow-2xl"
-              style="background: ${config.background_color}; color: ${config.text_color}; font-size: ${baseFontSize * 1.125}px; border: 3px solid ${config.text_color};"
-            >
-              Mainkan Permainan Baru
-            </button>
-            <button 
-              id="backToMapFinalBtn" 
-              class="px-8 py-4 rounded-full font-bold transition-all shadow-2xl"
-              style="background: white; color: ${config.background_color}; font-size: ${baseFontSize * 1.125}px; border: 3px solid ${config.background_color};"
-            >
-              Kembali ke Peta Level
-            </button>
+            
+            <p style="font-size: ${baseFontSize}px; color: ${config.text_color}; font-weight: 600; margin-bottom: 8px;">
+              Kamu telah menyelesaikan semua level! 🎊
+            </p>
+            <p style="font-size: ${baseFontSize * 0.875}px; color: ${config.text_color}; opacity: 0.8; margin-bottom: 8px;">
+              Selamat! Kamu sudah belajar tentang algoritma dan pseudocode. Terus berlatih untuk menjadi ahli!
+            </p>
+            
+            <div class="flex gap-4">
+              <button 
+                id="newGameBtn" 
+                class="flex-1 px-6 py-4 rounded-lg font-bold transition-all"
+                style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
+              >
+                Permainan Baru
+              </button>
+              <button 
+                id="backToMapFinalBtn" 
+                class="flex-1 px-6 py-4 rounded-lg font-bold transition-all"
+                style="background: ${config.surface_color}; color: ${config.text_color}; font-size: ${baseFontSize}px; border: 2px solid ${config.text_color};"
+              >
+                Kembali ke Peta
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -1179,7 +1128,6 @@
     // Drag and Drop Handlers
     let draggedElement = null;
     let draggedBlock = null;
-    let draggedPlayer = null;
 
     const setupDragAndDrop = () => {
       // Remove old listeners if they exist
@@ -1199,7 +1147,6 @@
         if (e.target.classList.contains('drag-block')) {
           draggedElement = e.target;
           draggedBlock = e.target.dataset.block;
-          draggedPlayer = parseInt(e.target.dataset.player);
           e.target.style.opacity = '0.5';
           playSound('click');
         }
@@ -1210,7 +1157,6 @@
           e.target.style.opacity = '1';
           draggedElement = null;
           draggedBlock = null;
-          draggedPlayer = null;
         }
       };
 
@@ -1232,27 +1178,17 @@
         e.preventDefault();
         const dropZone = e.target.classList.contains('drop-zone') ? e.target : e.target.closest('.drop-zone');
         
-        if (dropZone && draggedBlock && draggedPlayer) {
-          const targetPlayer = parseInt(dropZone.dataset.player);
+        if (dropZone && draggedBlock) {
+          gameState.playerBlocks.push(draggedBlock);
           
-          if (targetPlayer === draggedPlayer) {
-            // Only add the block once
-            if (targetPlayer === 1) {
-              gameState.player1Blocks.push(draggedBlock);
-            } else {
-              gameState.player2Blocks.push(draggedBlock);
-            }
-            
-            dropZone.classList.remove('drag-over');
-            playSound('click');
-            
-            // Clear dragged state immediately
-            draggedElement = null;
-            draggedBlock = null;
-            draggedPlayer = null;
-            
-            updateGameplay();
-          }
+          dropZone.classList.remove('drag-over');
+          playSound('click');
+          
+          // Clear dragged state immediately
+          draggedElement = null;
+          draggedBlock = null;
+          
+          updateGameplay();
         }
       };
       
@@ -1288,19 +1224,36 @@
           render();
         }
         
+        if (e.target.id === 'backToHomeFromInput') {
+          playSound('click');
+          gameState.screen = 'opening';
+          render();
+        }
+        
+        if (e.target.id === 'backToHomeFromIntro') {
+          playSound('click');
+          gameState.screen = 'opening';
+          render();
+        }
+        
+        if (e.target.id === 'backToHomeFromMap') {
+          stopTimer();
+          playSound('click');
+          gameState.screen = 'opening';
+          render();
+        }
+        
         if (e.target.id === 'startGameBtn') {
-          const player1 = document.getElementById('player1Input').value.trim();
-          const player2 = document.getElementById('player2Input').value.trim();
+          const player = document.getElementById('playerInput').value.trim();
           
-          if (player1 && player2) {
-            gameState.player1Name = player1;
-            gameState.player2Name = player2;
+          if (player) {
+            gameState.playerName = player;
             gameState.screen = 'introduction';
             playSound('click');
             render();
           } else {
             const messageEl = document.createElement('p');
-            messageEl.textContent = 'Mohon isi kedua nama pemain!';
+            messageEl.textContent = 'Mohon isi nama pemain!';
             messageEl.className = 'text-center mt-4';
             messageEl.style.color = '#ef4444';
             messageEl.style.fontSize = '14px';
@@ -1321,15 +1274,11 @@
           
           // Set state immediately
           gameState.currentLevel = level;
-          gameState.currentCases = levelCases[level];
-          gameState.player1Blocks = [];
-          gameState.player2Blocks = [];
-          gameState.player1Submitted = false;
-          gameState.player2Submitted = false;
-          gameState.player1TimeLeft = 60;
-          gameState.player2TimeLeft = 60;
-          gameState.player1Result = '';
-          gameState.player2Result = '';
+          gameState.currentCase = levelCases[level][Math.floor(Math.random() * 2)];
+          gameState.playerBlocks = [];
+          gameState.playerSubmitted = false;
+          gameState.playerTimeLeft = 60;
+          gameState.playerResult = '';
           gameState.screen = 'gameplay';
           
           // Render immediately without delay
@@ -1343,44 +1292,36 @@
         }
         
         if (e.target.classList.contains('reset-btn')) {
-          const player = parseInt(e.target.dataset.player);
-          if (player === 1) {
-            gameState.player1Blocks = [];
-          } else {
-            gameState.player2Blocks = [];
-          }
+          gameState.playerBlocks = [];
           playSound('click');
           updateGameplay();
         }
         
+        if (e.target.classList.contains('delete-block-btn')) {
+          const index = parseInt(e.target.dataset.index);
+          if (index >= 0 && index < gameState.playerBlocks.length) {
+            gameState.playerBlocks.splice(index, 1);
+            playSound('click');
+            updateGameplay();
+          }
+        }
+        
         if (e.target.classList.contains('submit-btn')) {
-          const player = parseInt(e.target.dataset.player);
-          
-          if ((player === 1 && gameState.player1Submitted) || (player === 2 && gameState.player2Submitted)) {
+          if (gameState.playerSubmitted) {
             return;
           }
           
-          const userBlocks = player === 1 ? gameState.player1Blocks : gameState.player2Blocks;
-          const correctSequence = gameState.currentCases[player - 1].correctSequence;
+          const userBlocks = gameState.playerBlocks;
+          const correctSequence = gameState.currentCase.correctSequence;
           
           const isCorrect = checkSequence(userBlocks, correctSequence);
           
-          if (player === 1) {
-            gameState.player1Submitted = true;
-            gameState.player1Result = isCorrect ? 'correct' : 'incorrect';
-            if (isCorrect) {
-              gameState.player1Score += 100;
-              const timeBonus = gameState.player1TimeLeft * 2;
-              gameState.player1Score += timeBonus;
-            }
-          } else {
-            gameState.player2Submitted = true;
-            gameState.player2Result = isCorrect ? 'correct' : 'incorrect';
-            if (isCorrect) {
-              gameState.player2Score += 100;
-              const timeBonus = gameState.player2TimeLeft * 2;
-              gameState.player2Score += timeBonus;
-            }
+          gameState.playerSubmitted = true;
+          gameState.playerResult = isCorrect ? 'correct' : 'incorrect';
+          if (isCorrect) {
+            gameState.playerScore += 100;
+            const timeBonus = gameState.playerTimeLeft * 2;
+            gameState.playerScore += timeBonus;
           }
           
           if (isCorrect) {
@@ -1396,8 +1337,41 @@
           // Update UI immediately
           updateGameplay();
           
-          // Check if both players completed with async handling
-          await checkBothCompleted();
+          // Save data and move to next screen
+          if (window.dataSdk) {
+            if (!gameState.completedLevels.includes(gameState.currentLevel)) {
+              gameState.completedLevels.push(gameState.currentLevel);
+            }
+            
+            gameState.sessionId = gameState.sessionId || `session_${Date.now()}`;
+            
+            const result = await window.dataSdk.create({
+              player_name: gameState.playerName,
+              current_level: gameState.currentLevel,
+              player_score: gameState.playerScore,
+              completed_levels: gameState.completedLevels.join(','),
+              session_id: gameState.sessionId,
+              timestamp: new Date().toISOString()
+            });
+            
+            if (!result.isOk) {
+              console.error('Failed to save data');
+            }
+          }
+          
+          // Play victory sound after data is saved
+          playSound('complete');
+          
+          stopTimer();
+          
+          setTimeout(() => {
+            if (gameState.currentLevel === gameState.maxLevel) {
+              gameState.screen = 'final';
+            } else {
+              gameState.screen = 'levelComplete';
+            }
+            render();
+          }, 1500);
         }
         
         if (e.target.id === 'nextLevelBtn') {
@@ -1405,15 +1379,11 @@
           
           // Set state immediately
           gameState.currentLevel++;
-          gameState.currentCases = levelCases[gameState.currentLevel];
-          gameState.player1Blocks = [];
-          gameState.player2Blocks = [];
-          gameState.player1Submitted = false;
-          gameState.player2Submitted = false;
-          gameState.player1TimeLeft = 60;
-          gameState.player2TimeLeft = 60;
-          gameState.player1Result = '';
-          gameState.player2Result = '';
+          gameState.currentCase = levelCases[gameState.currentLevel][Math.floor(Math.random() * 2)];
+          gameState.playerBlocks = [];
+          gameState.playerSubmitted = false;
+          gameState.playerTimeLeft = 60;
+          gameState.playerResult = '';
           gameState.screen = 'gameplay';
           
           // Render immediately
@@ -1437,24 +1407,18 @@
           stopTimer();
           gameState = {
             screen: 'playerInput',
-            player1Name: '',
-            player2Name: '',
+            playerName: '',
             currentLevel: 1,
             maxLevel: 5,
-            player1Score: 0,
-            player2Score: 0,
-            player1Blocks: [],
-            player2Blocks: [],
+            playerScore: 0,
+            playerBlocks: [],
             completedLevels: [],
             sessionId: '',
-            currentCases: null,
-            player1Submitted: false,
-            player2Submitted: false,
-            player1TimeLeft: 60,
-            player2TimeLeft: 60,
+            currentCase: null,
+            playerSubmitted: false,
+            playerTimeLeft: 60,
             timerInterval: null,
-            player1Result: '',
-            player2Result: ''
+            playerResult: ''
           };
           playSound('click');
           render();
@@ -1466,27 +1430,31 @@
       const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
       const baseFontSize = config.font_size || defaultConfig.font_size;
       
-      [1, 2].forEach(playerNum => {
-        const playerBlocks = playerNum === 1 ? gameState.player1Blocks : gameState.player2Blocks;
-        const playerColor = playerNum === 1 ? config.primary_action_color : config.secondary_action_color;
-        const constructedContainer = document.querySelector(`.constructed-blocks-${playerNum}`);
-        
-        if (constructedContainer) {
-          if (playerBlocks.length === 0) {
-            constructedContainer.innerHTML = `<p style="color: ${config.text_color}; opacity: 0.5; font-size: ${baseFontSize * 0.875}px;">Seret blok ke sini...</p>`;
-          } else {
-            constructedContainer.innerHTML = playerBlocks.map((block, index) => `
-              <div 
-                class="p-3 rounded-lg mb-2"
-                style="background: ${playerColor}; color: ${config.background_color}; font-size: ${baseFontSize * 0.875}px;"
+      const playerBlocks = gameState.playerBlocks;
+      const constructedContainer = document.querySelector('.constructed-blocks');
+      
+      if (constructedContainer) {
+        if (playerBlocks.length === 0) {
+          constructedContainer.innerHTML = `<p style="color: ${config.text_color}; opacity: 0.5; font-size: ${baseFontSize * 0.875}px;">Seret blok ke sini...</p>`;
+        } else {
+          constructedContainer.innerHTML = playerBlocks.map((block, index) => `
+            <div 
+              class="flex items-center justify-between p-3 rounded-lg mb-2"
+              style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize * 0.875}px;"
+              data-index="${index}"
+            >
+              <span>${block}</span>
+              <button 
+                class="delete-block-btn ml-2 px-2 py-1 rounded transition-all"
                 data-index="${index}"
+                style="background: rgba(255,255,255,0.2); color: ${config.background_color}; border: none; cursor: pointer; font-weight: bold; font-size: ${baseFontSize * 0.75}px;"
               >
-                ${block}
-              </div>
-            `).join('');
-          }
+                ✕
+              </button>
+            </div>
+          `).join('');
         }
-      });
+      }
     };
 
     const render = () => {
@@ -1658,5 +1626,5 @@
 
     init();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ba9ebc5730ae9cd',t:'MTc2Nzg1NjcwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cb7cb7684fde9cc',t:'MTc3MDY4NjUzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
