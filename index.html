@@ -4,452 +4,546 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Arena Pseudocode</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="/_sdk/element_sdk.js"></script>
-  <script src="/_sdk/data_sdk.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
   <style>
-    body {
-      box-sizing: border-box;
+    * { box-sizing: border-box; }
+    body { font-family: 'Fredoka', sans-serif; }
+    .code-font { font-family: 'Space Mono', monospace; }
+    
+    .level-node {
+      transition: all 0.3s ease;
+    }
+    .level-node:not(.locked):hover {
+      transform: scale(1.1);
+    }
+    .level-node.locked {
+      filter: grayscale(100%);
+      opacity: 0.5;
+    }
+    .level-node.completed {
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
     }
     
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-30px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-    
-    @keyframes glow {
-      0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
-      50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
-    }
-    
-    .fade-in {
-      animation: fadeIn 0.6s ease-out;
-    }
-    
-    .slide-in {
-      animation: slideIn 0.5s ease-out;
-    }
-    
-    .pulse-btn {
-      animation: pulse 2s ease-in-out infinite;
-    }
-    
-    .glow-effect {
-      animation: glow 2s ease-in-out infinite;
-    }
-    
-    .drag-block {
-      cursor: move;
-      user-select: none;
+    .block-item {
+      cursor: grab;
+      transition: all 0.2s ease;
       touch-action: none;
     }
-    
-    .drag-over {
-      border: 2px dashed #3b82f6;
-      background-color: rgba(59, 130, 246, 0.1);
+    .block-item:active {
+      cursor: grabbing;
+    }
+    .block-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    .block-item.dragging {
+      opacity: 0.5;
+      transform: scale(1.05);
     }
     
     .drop-zone {
       min-height: 60px;
-      border: 2px dashed #475569;
-      border-radius: 8px;
-      transition: all 0.3s ease;
+      border: 2px dashed #94a3b8;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+    .drop-zone.drag-over {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .drop-zone.has-block {
+      border-style: solid;
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.05);
     }
     
-    .level-locked {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .workspace-block {
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
     }
     
-    .level-completed {
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    .path-line {
+      stroke-dasharray: 10, 5;
+      animation: dashMove 1s linear infinite;
+    }
+    @keyframes dashMove {
+      to { stroke-dashoffset: -15; }
     }
     
-    .level-active {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    }
-    
-    .keypad {
+    .confetti {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(15, 23, 42, 0.98);
-      border-top: 3px solid #2563eb;
-      padding: 16px;
-      z-index: 1000;
-      transform: translateY(100%);
-      transition: transform 0.3s ease;
+      pointer-events: none;
+      animation: confettiFall 2s ease-out forwards;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
     }
     
-    .keypad.active {
+    .shake {
+      animation: shake 0.5s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-10px); }
+      40%, 80% { transform: translateX(10px); }
+    }
+    
+    .pulse-success {
+      animation: pulseSuccess 0.6s ease;
+    }
+    @keyframes pulseSuccess {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    .input-field {
+      background: rgba(255,255,255,0.9);
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      width: 120px;
+      transition: all 0.2s;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      transition: all 0.2s ease;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+    .btn-primary:active {
       transform: translateY(0);
     }
     
-    .tech-background {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0c4a6e 100%);
-      overflow: hidden;
+    .btn-success {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    }
+    .btn-success:hover {
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
     }
     
-    .tech-background::before {
-      content: '';
+    .btn-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    .btn-warning:hover {
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    }
+    
+    .game-container {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    }
+    
+    .map-bg {
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.05) 0%, transparent 70%);
+    }
+    
+    .star {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: 
-        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 20%, rgba(30, 144, 255, 0.05) 0%, transparent 50%);
-      animation: bgFloat 20s ease-in-out infinite;
+      width: 4px;
+      height: 4px;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 2s ease-in-out infinite;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
     }
     
-    .tech-background::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: 
-        repeating-linear-gradient(0deg, rgba(59, 130, 246, 0.03) 0px, transparent 1px, transparent 2px, rgba(59, 130, 246, 0.03) 3px),
-        repeating-linear-gradient(90deg, rgba(59, 130, 246, 0.03) 0px, transparent 1px, transparent 2px, rgba(59, 130, 246, 0.03) 3px);
-      background-size: 100px 100px;
-      animation: bgShift 30s linear infinite;
-    }
-    
-    @keyframes bgFloat {
-      0%, 100% { transform: translate(0, 0); }
-      50% { transform: translate(30px, -30px); }
-    }
-    
-    @keyframes bgShift {
-      0% { background-position: 0 0; }
-      100% { background-position: 100px 100px; }
-    }
-    
-    .floating-shapes {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      pointer-events: none;
-    }
-    
+    /* Animated background elements */
     .floating-shape {
       position: absolute;
-      border: 2px solid rgba(59, 130, 246, 0.15);
-      opacity: 0.8;
+      border-radius: 50%;
+      opacity: 0.15;
+      animation: float 15s infinite ease-in-out;
     }
     
     .shape-1 {
-      width: 150px;
-      height: 150px;
-      top: 10%;
-      left: 5%;
-      border-radius: 30%;
-      animation: float1 15s ease-in-out infinite;
+      width: 300px;
+      height: 300px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      top: -100px;
+      left: 10%;
+      animation: float 20s infinite ease-in-out;
     }
     
     .shape-2 {
-      width: 200px;
-      height: 200px;
-      top: 60%;
-      right: 5%;
-      border-radius: 40%;
-      animation: float2 18s ease-in-out infinite;
+      width: 250px;
+      height: 250px;
+      background: linear-gradient(135deg, #ec4899, #f59e0b);
+      bottom: -80px;
+      right: 15%;
+      animation: float 25s infinite ease-in-out reverse;
     }
     
     .shape-3 {
-      width: 100px;
-      height: 100px;
-      top: 30%;
-      right: 15%;
-      border-radius: 25%;
-      animation: float3 12s ease-in-out infinite;
+      width: 200px;
+      height: 200px;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      top: 50%;
+      right: 5%;
+      animation: float 18s infinite ease-in-out;
     }
     
-    .shape-4 {
-      width: 120px;
-      height: 120px;
-      bottom: 15%;
-      left: 10%;
-      border-radius: 35%;
-      animation: float1 20s ease-in-out infinite;
-    }
-    
-    @keyframes float1 {
+    @keyframes float {
       0%, 100% { transform: translateY(0px) translateX(0px); }
-      25% { transform: translateY(-20px) translateX(10px); }
-      50% { transform: translateY(-30px) translateX(-10px); }
-      75% { transform: translateY(-10px) translateX(20px); }
+      25% { transform: translateY(-30px) translateX(20px); }
+      50% { transform: translateY(-60px) translateX(0px); }
+      75% { transform: translateY(-30px) translateX(-20px); }
     }
     
-    @keyframes float2 {
-      0%, 100% { transform: translateY(0px) translateX(0px); }
-      33% { transform: translateY(25px) translateX(-15px); }
-      66% { transform: translateY(-15px) translateX(25px); }
+    /* Grid background */
+    .grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
     }
     
-    @keyframes float3 {
-      0%, 100% { transform: rotate(0deg) translateY(0px); }
-      50% { transform: rotate(180deg) translateY(-25px); }
+    /* Level node glow effect */
+    .level-node {
+      position: relative;
     }
     
-    .keypad-key {
-      min-width: 60px;
-      height: 50px;
-      border-radius: 8px;
-      font-size: 18px;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      cursor: pointer;
-      user-select: none;
+    .level-node::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      background: inherit;
+      border-radius: inherit;
+      opacity: 0;
+      animation: none;
+      z-index: -1;
     }
     
-    .keypad-key:active {
-      transform: scale(0.95);
+    .level-node:not(.locked)::before {
+      animation: glow 2s ease-in-out infinite;
+    }
+    
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.3); opacity: 0; }
+      50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); opacity: 1; }
+    }
+    
+    /* Path animation enhancement */
+    .path-line {
+      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3));
+    }
+    
+    /* Status badge animation */
+    .status-badge {
+      display: inline-block;
+      animation: pulse-badge 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-badge {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
     }
   </style>
-  <style id="keypad-key-colors">
-    .keypad-key {
-      background: #334155;
-      color: #e2e8f0;
-    }
-    
-    .keypad-key.bg-red-500 {
-      background: #dc2626;
-      color: white;
-    }
-    
-    .keypad-key.bg-blue-500 {
-      background: #2563eb;
-      color: white;
-    }
-    
-    .keypad-key.bg-slate-700 {
-      background: #334155;
-      color: #e2e8f0;
-    }
-  </style>
-  <style>@view-transition { navigation: auto; }</style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  </head>
- <body class="h-full">
-  <div class="tech-background"></div>
-  <div class="floating-shapes">
-   <div class="floating-shape shape-1"></div>
-   <div class="floating-shape shape-2"></div>
-   <div class="floating-shape shape-3"></div>
-   <div class="floating-shape shape-4"></div>
-  </div>
-  <div id="app" class="h-full w-full overflow-auto"></div><!-- Virtual Keypad -->
-  <div id="keypad" class="keypad">
-   <div class="max-w-4xl mx-auto">
-    <div class="flex justify-between items-center mb-3">
-     <div id="keypadTarget" class="text-white text-sm opacity-75"></div><button id="closeKeypad" class="px-4 py-2 rounded-lg bg-red-600 text-white font-bold"> Tutup ✕ </button>
+ <body class="h-full m-0 p-0 overflow-hidden">
+  <div id="app" class="game-container h-full w-full overflow-auto"><!-- Map View -->
+   <div id="mapView" class="h-full w-full map-bg relative overflow-hidden"><!-- Animated Background Shapes -->
+    <div class="floating-shape shape-1"></div>
+    <div class="floating-shape shape-2"></div>
+    <div class="floating-shape shape-3"></div>
+    <div class="grid-bg"></div><!-- Stars Background -->
+    <div id="stars" class="absolute inset-0 pointer-events-none"></div><!-- Header -->
+    <header class="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
+     <h1 id="gameTitle" class="text-3xl font-bold text-white drop-shadow-lg">🏆 Arena Pseudocode</h1>
+     <div class="flex items-center gap-4">
+      <div class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 text-white"><span class="text-sm opacity-70">Total Skor:</span> <span id="totalScore" class="text-xl font-bold ml-2">0</span>
+      </div>
+     </div>
+    </header><!-- Level Map -->
+    <div class="absolute inset-0 flex items-center justify-center pt-16">
+     <svg class="absolute w-full h-full" viewbox="0 0 1200 600" preserveaspectratio="xMidYMid meet"><!-- Path Lines --> <path id="path1-2" class="path-line" d="M200 300 Q300 200 400 300" stroke="#4b5563" stroke-width="4" fill="none" /> <path id="path2-3" class="path-line" d="M400 300 Q500 400 600 300" stroke="#4b5563" stroke-width="4" fill="none" /> <path id="path3-4" class="path-line" d="M600 300 Q700 200 800 300" stroke="#4b5563" stroke-width="4" fill="none" /> <path id="path4-5" class="path-line" d="M800 300 Q900 400 1000 300" stroke="#4b5563" stroke-width="4" fill="none" />
+     </svg>
+     <div class="relative w-full max-w-6xl mx-auto px-8">
+      <div class="flex justify-between items-center"><!-- Level 1 -->
+       <div class="level-node-container text-center"><button id="level1" onclick="startLevel(1)" class="level-node w-28 h-28 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl border-4 border-white/40 hover:shadow-green-500/50 transition-all duration-300"> 1 </button>
+        <p class="text-white mt-4 font-semibold text-lg">Dasar</p>
+        <div id="score1" class="text-green-300 text-sm mt-2 font-medium">
+         ✨ Siap Dimainkan
+        </div>
+       </div><!-- Level 2 -->
+       <div class="level-node-container text-center"><button id="level2" onclick="startLevel(2)" class="level-node locked w-28 h-28 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl border-4 border-white/40 transition-all duration-300" disabled> 2 </button>
+        <p class="text-white mt-4 font-semibold text-lg">Campuran</p>
+        <div id="score2" class="text-slate-400 text-sm mt-2 font-medium">
+         🔒 Terkunci
+        </div>
+       </div><!-- Level 3 -->
+       <div class="level-node-container text-center"><button id="level3" onclick="startLevel(3)" class="level-node locked w-28 h-28 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl border-4 border-white/40 transition-all duration-300" disabled> 3 </button>
+        <p class="text-white mt-4 font-semibold text-lg">Sisa Bagi</p>
+        <div id="score3" class="text-slate-400 text-sm mt-2 font-medium">
+         🔒 Terkunci
+        </div>
+       </div><!-- Level 4 -->
+       <div class="level-node-container text-center"><button id="level4" onclick="startLevel(4)" class="level-node locked w-28 h-28 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl border-4 border-white/40 transition-all duration-300" disabled> 4 </button>
+        <p class="text-white mt-4 font-semibold text-lg">Multi Variabel</p>
+        <div id="score4" class="text-slate-400 text-sm mt-2 font-medium">
+         🔒 Terkunci
+        </div>
+       </div><!-- Level 5 -->
+       <div class="level-node-container text-center"><button id="level5" onclick="startLevel(5)" class="level-node locked w-28 h-28 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl border-4 border-white/40 transition-all duration-300" disabled> 5 </button>
+        <p class="text-white mt-4 font-semibold text-lg">Kompleks</p>
+        <div id="score5" class="text-slate-400 text-sm mt-2 font-medium">
+         🔒 Terkunci
+        </div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Info Footer -->
+    <footer class="absolute bottom-0 left-0 right-0 p-6 text-center">
+     <p class="text-white/60 text-sm">Informatika Kelas VIII • Berpikir Komputasional &amp; Algoritma</p>
+    </footer>
+   </div><!-- Game View -->
+   <div id="gameView" class="h-full w-full hidden">
+    <div class="h-full flex flex-col"><!-- Game Header -->
+     <header class="bg-slate-800 px-6 py-4 flex justify-between items-center border-b border-slate-700">
+      <div class="flex items-center gap-4"><button onclick="backToMap()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all"> ← Kembali </button>
+       <h2 id="levelTitle" class="text-xl font-bold text-white">Level 1</h2>
+      </div>
+      <div class="flex items-center gap-4"><span id="attemptCounter" class="text-slate-400">Percobaan: 1</span>
+      </div>
+     </header><!-- Game Content -->
+     <div class="flex-1 flex overflow-hidden"><!-- Left Panel: Case Description -->
+      <div class="w-1/3 bg-slate-900 p-6 overflow-auto border-r border-slate-700">
+       <div class="bg-slate-800 rounded-xl p-5 mb-6">
+        <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">📋 Studi Kasus</h3>
+        <p id="caseDescription" class="text-slate-300 leading-relaxed"></p>
+       </div>
+       <div class="bg-slate-800 rounded-xl p-5 mb-6">
+        <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">🎯 Tujuan</h3>
+        <p id="caseObjective" class="text-slate-300 leading-relaxed"></p>
+       </div>
+       <div class="bg-slate-800 rounded-xl p-5">
+        <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">💡 Petunjuk</h3>
+        <ul id="caseHints" class="text-slate-300 text-sm space-y-2"></ul>
+       </div>
+      </div><!-- Middle Panel: Workspace -->
+      <div class="w-1/3 bg-slate-950 p-6 overflow-auto">
+       <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">🔧 Area Kerja Pseudocode</h3>
+       <div id="workspace" class="space-y-3"><!-- Drop zones will be generated here -->
+       </div>
+      </div><!-- Right Panel: Blocks -->
+      <div class="w-1/3 bg-slate-900 p-6 overflow-auto border-l border-slate-700">
+       <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">🧩 Blok Instruksi</h3>
+       <p class="text-slate-400 text-sm mb-4">Seret blok ke area kerja untuk menyusun pseudocode</p>
+       <div id="blockPalette" class="space-y-3"><!-- Blocks will be generated here -->
+       </div>
+      </div>
+     </div><!-- Game Footer -->
+     <footer class="bg-slate-800 px-6 py-4 flex justify-between items-center border-t border-slate-700"><button onclick="resetWorkspace()" class="btn-warning text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all hover:translate-y-[-2px]"> 🔄 Reset </button> <button onclick="checkAnswer()" class="btn-success text-white px-8 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all hover:translate-y-[-2px]"> ✓ Selesai </button>
+     </footer>
     </div>
-    <div class="grid grid-cols-10 gap-2"><button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="1">1</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="2">2</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="3">3</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="4">4</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="5">5</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="6">6</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="7">7</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="8">8</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="9">9</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="0">0</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="Q">Q</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="W">W</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="E">E</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="R">R</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="T">T</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="Y">Y</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="U">U</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="I">I</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="O">O</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="P">P</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="A">A</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="S">S</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="D">D</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="F">F</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="G">G</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="H">H</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="J">J</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="K">K</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="L">L</button> <button class="keypad-key bg-red-500 text-white col-span-1" data-key="Backspace">⌫</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="Z">Z</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="X">X</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="C">C</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="V">V</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="B">B</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="N">N</button> <button class="keypad-key bg-slate-700 text-e2e8f0 col-span-1" data-key="M">M</button> <button class="keypad-key bg-blue-500 text-white col-span-3" data-key=" ">SPASI</button>
+   </div><!-- Result Modal -->
+   <div id="resultModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div id="resultContent" class="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 text-center transform scale-95 opacity-0 transition-all duration-300">
+     <div id="resultIcon" class="text-6xl mb-4">
+      🎉
+     </div>
+     <h3 id="resultTitle" class="text-2xl font-bold text-white mb-3">Selamat!</h3>
+     <p id="resultMessage" class="text-slate-300 mb-6"></p>
+     <div id="resultActions" class="flex gap-4 justify-center"><!-- Buttons will be added dynamically -->
+     </div>
+    </div>
+   </div><!-- Final Result Modal -->
+   <div id="finalModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div id="finalContent" class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-10 max-w-lg w-full mx-4 text-center transform scale-95 opacity-0 transition-all duration-300 border border-yellow-500/30">
+     <div class="text-7xl mb-4">
+      🏆
+     </div>
+     <h3 class="text-3xl font-bold text-yellow-400 mb-2">Permainan Selesai!</h3>
+     <p class="text-white text-lg mb-6">Kamu telah menyelesaikan semua level!</p>
+     <div class="bg-slate-700/50 rounded-xl p-6 mb-6">
+      <div class="grid grid-cols-2 gap-4 text-left">
+       <div>
+        <p class="text-slate-400 text-sm">Total Skor</p>
+        <p id="finalScore" class="text-3xl font-bold text-green-400">0</p>
+       </div>
+       <div>
+        <p class="text-slate-400 text-sm">Total Percobaan</p>
+        <p id="finalAttempts" class="text-3xl font-bold text-blue-400">0</p>
+       </div>
+      </div>
+     </div>
+     <div class="bg-slate-700/50 rounded-xl p-4 mb-6">
+      <p class="text-slate-400 text-sm mb-2">Ringkasan Performa</p>
+      <div id="performanceSummary" class="text-white text-sm space-y-1"></div>
+     </div>
+     <div class="flex gap-4 justify-center"><button onclick="resetGame()" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold"> 🔄 Mainkan Ulang </button> <button onclick="closeFinalModal()" class="bg-slate-600 hover:bg-slate-500 text-white px-6 py-3 rounded-xl font-semibold transition-all"> 📍 Ke Peta Level </button>
+     </div>
     </div>
    </div>
   </div>
   <script>
-    // Configuration
+    // Game State
+    let gameState = {
+      currentLevel: 0,
+      unlockedLevels: [1],
+      scores: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      attempts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      currentAttempt: 0
+    };
+
+    // Default Config
     const defaultConfig = {
+      game_title: "Arena Pseudocode",
       background_color: "#0f172a",
       surface_color: "#1e293b",
-      text_color: "#e2e8f0",
-      primary_action_color: "#3b82f6",
-      secondary_action_color: "#0ea5e9",
-      game_title: "Arena Pseudocode",
-    //  game_subtitle: "Tantangan Logika Perseorangan",
-      play_button_text: "MULAI PERMAINAN",
-      next_level_text: "Lanjut ke Level Berikutnya",
-      font_family: "Inter",
+      text_color: "#f8fafc",
+      primary_color: "#3b82f6",
+      secondary_color: "#22c55e",
+      font_family: "Fredoka",
       font_size: 16
     };
 
-    // Game State
-    let gameState = {
-      screen: 'opening',
-      playerName: '',
-      currentLevel: 1,
-      maxLevel: 5,
-      playerScore: 0,
-      playerBlocks: [],
-      completedLevels: [],
-      sessionId: '',
-      currentCase: null,
-      playerSubmitted: false,
-      playerTimeLeft: 60,
-      timerInterval: null,
-      playerResult: ''
-    };
-    
-    // Keypad State
-    let keypadState = {
-      activeInput: null,
-      isOpen: false
-    };
-
-    // Keypad Functions
-    const openKeypad = (inputElement) => {
-      keypadState.activeInput = inputElement;
-      keypadState.isOpen = true;
-      
-      const keypad = document.getElementById('keypad');
-      const keypadTarget = document.getElementById('keypadTarget');
-      
-      keypad.classList.add('active');
-      keypadTarget.textContent = `${inputElement.placeholder || 'Input nama'}`;
-      
-      playSound('click');
-    };
-    
-    const closeKeypad = () => {
-      keypadState.activeInput = null;
-      keypadState.isOpen = false;
-      
-      const keypad = document.getElementById('keypad');
-      keypad.classList.remove('active');
-      
-      playSound('click');
-    };
-    
-    const handleKeypadInput = (key) => {
-      if (!keypadState.activeInput) return;
-      
-      const input = keypadState.activeInput;
-      const currentValue = input.value;
-      
-      if (key === 'Backspace') {
-        input.value = currentValue.slice(0, -1);
-      } else {
-        input.value = currentValue + key;
+    // Level Data
+    const levels = {
+      1: {
+        title: "Level 1 - Dasar",
+        description: "Budi ingin menghitung total belanjaan di toko. Ia membeli buku seharga Rp 15.000 dan pensil seharga Rp 5.000. Buatlah pseudocode untuk menghitung total belanja Budi!",
+        objective: "Hitung total dari dua bilangan (harga buku + harga pensil) dan tampilkan hasilnya.",
+        hints: [
+          "Gunakan variabel untuk menyimpan harga masing-masing barang",
+          "Jumlahkan kedua harga untuk mendapatkan total",
+          "Tampilkan hasil totalnya"
+        ],
+        blocks: [
+          { id: "start", type: "MULAI", color: "from-green-500 to-green-600", content: "MULAI" },
+          { id: "var1", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "harga_buku ← 15000" },
+          { id: "var2", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "harga_pensil ← 5000" },
+          { id: "proc1", type: "PROSES", color: "from-blue-500 to-blue-600", content: "total ← harga_buku + harga_pensil" },
+          { id: "out1", type: "OUTPUT", color: "from-yellow-500 to-yellow-600", content: "TAMPILKAN total" },
+          { id: "end", type: "SELESAI", color: "from-red-500 to-red-600", content: "SELESAI" }
+        ],
+        solution: ["start", "var1", "var2", "proc1", "out1", "end"]
+      },
+      2: {
+        title: "Level 2 - Operasi Campuran",
+        description: "Sebuah toko memberikan diskon 20% untuk pembelian baju seharga Rp 100.000. Buatlah pseudocode untuk menghitung harga setelah diskon!",
+        objective: "Hitung harga akhir dengan mengurangi harga awal dengan besaran diskon (harga × 20 ÷ 100).",
+        hints: [
+          "Simpan harga awal dalam variabel",
+          "Hitung nilai diskon (harga × 20 ÷ 100)",
+          "Kurangi harga dengan diskon untuk mendapat harga akhir"
+        ],
+        blocks: [
+          { id: "start", type: "MULAI", color: "from-green-500 to-green-600", content: "MULAI" },
+          { id: "var1", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "harga_awal ← 100000" },
+          { id: "var2", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "persen_diskon ← 20" },
+          { id: "proc1", type: "PROSES", color: "from-blue-500 to-blue-600", content: "diskon ← harga_awal × persen_diskon ÷ 100" },
+          { id: "proc2", type: "PROSES", color: "from-blue-500 to-blue-600", content: "harga_akhir ← harga_awal - diskon" },
+          { id: "out1", type: "OUTPUT", color: "from-yellow-500 to-yellow-600", content: "TAMPILKAN harga_akhir" },
+          { id: "end", type: "SELESAI", color: "from-red-500 to-red-600", content: "SELESAI" }
+        ],
+        solution: ["start", "var1", "var2", "proc1", "proc2", "out1", "end"]
+      },
+      3: {
+        title: "Level 3 - Sisa Pembagian",
+        description: "Ada 47 permen yang akan dibagikan kepada 5 anak secara merata. Buatlah pseudocode untuk menghitung berapa permen yang diterima setiap anak dan berapa sisa permen!",
+        objective: "Gunakan operasi pembagian untuk permen per anak dan modulo (sisa bagi) untuk sisa permen.",
+        hints: [
+          "Pembagian biasa (÷) untuk jumlah per anak",
+          "Operasi MOD untuk mencari sisa pembagian",
+          "Tampilkan kedua hasil"
+        ],
+        blocks: [
+          { id: "start", type: "MULAI", color: "from-green-500 to-green-600", content: "MULAI" },
+          { id: "var1", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "total_permen ← 47" },
+          { id: "var2", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "jumlah_anak ← 5" },
+          { id: "proc1", type: "PROSES", color: "from-blue-500 to-blue-600", content: "permen_per_anak ← total_permen ÷ jumlah_anak" },
+          { id: "proc2", type: "PROSES", color: "from-blue-500 to-blue-600", content: "sisa_permen ← total_permen MOD jumlah_anak" },
+          { id: "out1", type: "OUTPUT", color: "from-yellow-500 to-yellow-600", content: "TAMPILKAN permen_per_anak" },
+          { id: "out2", type: "OUTPUT", color: "from-yellow-500 to-yellow-600", content: "TAMPILKAN sisa_permen" },
+          { id: "end", type: "SELESAI", color: "from-red-500 to-red-600", content: "SELESAI" }
+        ],
+        solution: ["start", "var1", "var2", "proc1", "proc2", "out1", "out2", "end"]
+      },
+      4: {
+        title: "Level 4 - Multi Variabel",
+        description: "Sebuah persegi panjang memiliki panjang 12 cm dan lebar 8 cm. Buatlah pseudocode untuk menghitung luas dan keliling persegi panjang tersebut!",
+        objective: "Hitung luas (panjang × lebar) dan keliling (2 × (panjang + lebar)) menggunakan variabel yang sama.",
+        hints: [
+          "Luas = panjang × lebar",
+          "Keliling = 2 × (panjang + lebar)",
+          "Gunakan variabel untuk menyimpan kedua hasil"
+        ],
+        blocks: [
+          { id: "start", type: "MULAI", color: "from-green-500 to-green-600", content: "MULAI" },
+          { id: "var1", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "panjang ← 12" },
+          { id: "var2", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "lebar ← 8" },
+          { id: "proc1", type: "PROSES", color: "from-blue-500 to-blue-600", content: "luas ← panjang × lebar" },
+          { id: "proc2", type: "PROSES", color: "from-blue-500 to-blue-600", content: "keliling ← 2 × (panjang + lebar)" },
+          { id: "out1", type: "OUTPUT", color: "from-yellow-500 to-yellow-600", content: "TAMPILKAN luas" },
+          { id: "out2", type: "OUTPUT", color: "from-yellow-500 to-yellow-600", content: "TAMPILKAN keliling" },
+          { id: "end", type: "SELESAI", color: "from-red-500 to-red-600", content: "SELESAI" }
+        ],
+        solution: ["start", "var1", "var2", "proc1", "proc2", "out1", "out2", "end"]
+      },
+      5: {
+        title: "Level 5 - Studi Kasus Kompleks",
+        description: "Seorang pedagang membeli 50 buah jeruk dengan harga Rp 2.000 per buah. Ia menjual 45 jeruk dengan harga Rp 3.000 per buah dan 5 jeruk rusak tidak bisa dijual. Buatlah pseudocode untuk menghitung modal, pendapatan, dan keuntungan pedagang!",
+        objective: "Kelola beberapa input (jumlah, harga beli, harga jual, rusak) dan hasilkan beberapa output (modal, pendapatan, keuntungan).",
+        hints: [
+          "Modal = jumlah_beli × harga_beli",
+          "Pendapatan = jumlah_jual × harga_jual",
+          "Keuntungan = pendapatan - modal"
+        ],
+        blocks: [
+          { id: "start", type: "MULAI", color: "from-green-500 to-green-600", content: "MULAI" },
+          { id: "var1", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "jumlah_beli ← 50" },
+          { id: "var2", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "harga_beli ← 2000" },
+          { id: "var3", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "jumlah_jual ← 45" },
+          { id: "var4", type: "DEKLARASI", color: "from-purple-500 to-purple-600", content: "harga_jual ← 3000" },
+          { id: "proc1", type: "PROSES", color: "from-blue-500 to-blue-600", content: "modal ← jumlah_beli × harga_beli" },
+          { id: "proc2", type: "PROSES", color: "from-blue-500 to-blue-600", content: "pendapatan ← jumlah_jual × harga_jual" },
+          { id: "proc3", type: "PROSES", color: "from-blue-500 to-blue-600", content: "keuntungan ← pendapatan - modal" },
+          { id: "out1", type: "OUTPUT", color: "from-yellow-500 to-yellow-600", content: "TAMPILKAN modal" },
+          { id: "out2", type: "OUTPUT", color: "from-yellow-500 to-yellow-600", content: "TAMPILKAN pendapatan" },
+          { id: "out3", type: "OUTPUT", color: "from-yellow-500 to-yellow-600", content: "TAMPILKAN keuntungan" },
+          { id: "end", type: "SELESAI", color: "from-red-500 to-red-600", content: "SELESAI" }
+        ],
+        solution: ["start", "var1", "var2", "var3", "var4", "proc1", "proc2", "proc3", "out1", "out2", "out3", "end"]
       }
-      
-      playSound('click');
-      
-      // Trigger input event for any listeners
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    };
-    
-    // Setup Keypad Event Listeners
-    const setupKeypadListeners = () => {
-      const keypad = document.getElementById('keypad');
-      const closeBtn = document.getElementById('closeKeypad');
-      
-      // Close button
-      closeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeKeypad();
-      });
-      
-      // Keypad keys
-      keypad.addEventListener('click', (e) => {
-        if (e.target.classList.contains('keypad-key')) {
-          e.stopPropagation();
-          const key = e.target.dataset.key;
-          handleKeypadInput(key);
-        }
-      });
     };
 
-    // Level Cases
-    const levelCases = {
-      1: [
-        {
-          title: "Menghitung Total Belanja",
-          description: "Seorang pembeli membeli 3 barang: Rp 15.000, Rp 20.000, dan Rp 10.000. Hitung total belanjanya!",
-          correctSequence: ["Mulai", "harga1 = 15000", "harga2 = 20000", "harga3 = 10000", "total = harga1 + harga2 + harga3", "Tampilkan total", "Selesai"],
-          availableBlocks: ["Mulai", "harga1 = 15000", "harga2 = 20000", "harga3 = 10000", "total = harga1 + harga2 + harga3", "Tampilkan total", "Selesai", "total = harga1 - harga2", "harga4 = 5000"]
-        },
-        {
-          title: "Menghitung Harga Setelah Diskon",
-          description: "Harga barang Rp 50.000 mendapat diskon Rp 10.000. Hitung harga yang harus dibayar!",
-          correctSequence: ["Mulai", "harga_awal = 50000", "diskon = 10000", "harga_bayar = harga_awal - diskon", "Tampilkan harga_bayar", "Selesai"],
-          availableBlocks: ["Mulai", "harga_awal = 50000", "diskon = 10000", "harga_bayar = harga_awal - diskon", "Tampilkan harga_bayar", "Selesai", "harga_bayar = harga_awal + diskon", "total = 40000"]
-        }
-      ],
-      2: [
-        {
-          title: "Menghitung Luas Persegi Panjang",
-          description: "Sebuah persegi panjang memiliki panjang 8 cm dan lebar 5 cm. Hitung luasnya!",
-          correctSequence: ["Mulai", "panjang = 8", "lebar = 5", "luas = panjang * lebar", "Tampilkan luas", "Selesai"],
-          availableBlocks: ["Mulai", "panjang = 8", "lebar = 5", "luas = panjang * lebar", "Tampilkan luas", "Selesai", "luas = panjang + lebar", "keliling = panjang * 2"]
-        },
-        {
-          title: "Membagi Permen Sama Rata",
-          description: "Ada 24 permen yang akan dibagikan kepada 6 anak sama rata. Berapa permen yang didapat setiap anak?",
-          correctSequence: ["Mulai", "total_permen = 24", "jumlah_anak = 6", "permen_per_anak = total_permen / jumlah_anak", "Tampilkan permen_per_anak", "Selesai"],
-          availableBlocks: ["Mulai", "total_permen = 24", "jumlah_anak = 6", "permen_per_anak = total_permen / jumlah_anak", "Tampilkan permen_per_anak", "Selesai", "permen_per_anak = total_permen * jumlah_anak", "sisa = 4"]
-        }
-      ],
-      3: [
-        {
-          title: "Menghitung Rata-rata Nilai",
-          description: "Seorang siswa mendapat nilai 80, 90, dan 85. Hitung nilai rata-ratanya!",
-          correctSequence: ["Mulai", "nilai1 = 80", "nilai2 = 90", "nilai3 = 85", "total = nilai1 + nilai2 + nilai3", "rata_rata = total / 3", "Tampilkan rata_rata", "Selesai"],
-          availableBlocks: ["Mulai", "nilai1 = 80", "nilai2 = 90", "nilai3 = 85", "total = nilai1 + nilai2 + nilai3", "rata_rata = total / 3", "Tampilkan rata_rata", "Selesai", "rata_rata = total * 3", "jumlah = 255"]
-        },
-        {
-          title: "Menghitung Sisa Uang",
-          description: "Kamu punya uang Rp 100.000. Membeli buku Rp 35.000 dan pensil Rp 15.000. Berapa sisa uangmu?",
-          correctSequence: ["Mulai", "uang_awal = 100000", "buku = 35000", "pensil = 15000", "total_belanja = buku + pensil", "sisa_uang = uang_awal - total_belanja", "Tampilkan sisa_uang", "Selesai"],
-          availableBlocks: ["Mulai", "uang_awal = 100000", "buku = 35000", "pensil = 15000", "total_belanja = buku + pensil", "sisa_uang = uang_awal - total_belanja", "Tampilkan sisa_uang", "Selesai", "sisa_uang = uang_awal + total_belanja", "pulpen = 10000"]
-        }
-      ],
-      4: [
-        {
-          title: "Menghitung Total Harga dengan Pajak",
-          description: "Harga barang Rp 80.000 dengan pajak 10%. Hitung total yang harus dibayar! (pajak = harga * 10 / 100)",
-          correctSequence: ["Mulai", "harga = 80000", "pajak = harga * 10 / 100", "total_bayar = harga + pajak", "Tampilkan total_bayar", "Selesai"],
-          availableBlocks: ["Mulai", "harga = 80000", "pajak = harga * 10 / 100", "total_bayar = harga + pajak", "Tampilkan total_bayar", "Selesai", "pajak = 10", "total_bayar = harga - pajak", "diskon = 8000"]
-        },
-        {
-          title: "Konversi Jam ke Menit",
-          description: "Andi belajar selama 3 jam. Berapa menit Andi belajar?",
-          correctSequence: ["Mulai", "jam = 3", "menit_per_jam = 60", "total_menit = jam * menit_per_jam", "Tampilkan total_menit", "Selesai"],
-          availableBlocks: ["Mulai", "jam = 3", "menit_per_jam = 60", "total_menit = jam * menit_per_jam", "Tampilkan total_menit", "Selesai", "total_menit = jam + menit_per_jam", "detik = 180", "jam = 180"]
-        }
-      ],
-      5: [
-        {
-          title: "Menghitung Keliling dan Luas Persegi",
-          description: "Sebuah persegi memiliki sisi 12 cm. Hitung keliling dan luasnya!",
-          correctSequence: ["Mulai", "sisi = 12", "keliling = sisi * 4", "luas = sisi * sisi", "Tampilkan keliling", "Tampilkan luas", "Selesai"],
-          availableBlocks: ["Mulai", "sisi = 12", "keliling = sisi * 4", "luas = sisi * sisi", "Tampilkan keliling", "Tampilkan luas", "Selesai", "keliling = sisi + 4", "luas = sisi * 4", "diagonal = sisi * 2"]
-        },
-        {
-          title: "Menghitung Total Belanja dengan Diskon",
-          description: "Belanja senilai Rp 200.000 dapat diskon 15%. Hitung total yang harus dibayar! (diskon_rupiah = harga * 15 / 100)",
-          correctSequence: ["Mulai", "harga = 200000", "diskon_rupiah = harga * 15 / 100", "total_bayar = harga - diskon_rupiah", "Tampilkan total_bayar", "Selesai"],
-          availableBlocks: ["Mulai", "harga = 200000", "diskon_rupiah = harga * 15 / 100", "total_bayar = harga - diskon_rupiah", "Tampilkan total_bayar", "Selesai", "diskon_rupiah = 15", "total_bayar = harga + diskon_rupiah", "pajak = 10000"]
-        }
-      ]
-    };
+    // Current workspace state
+    let workspaceBlocks = [];
+    let workspaceInputs = {};
+    let draggedBlock = null;
 
-    // Sound Effects (simple beep tones)
-    const playSound = (type) => {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    // Sound Effects (using Web Audio API)
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
@@ -457,1171 +551,703 @@
       gainNode.connect(audioContext.destination);
       
       if (type === 'success') {
-        oscillator.frequency.value = 800;
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.4);
+      } else if (type === 'error') {
+        oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.1);
         gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.3);
-      } else if (type === 'error') {
-        oscillator.frequency.value = 200;
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.2);
-      } else if (type === 'click') {
-        oscillator.frequency.value = 600;
+      } else if (type === 'drop') {
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
         gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.1);
-      } else if (type === 'complete') {
-        // Victory sound - ascending tones
-        const playTone = (freq, delay, duration) => {
-          setTimeout(() => {
-            const osc = audioContext.createOscillator();
-            const gain = audioContext.createGain();
-            osc.connect(gain);
-            gain.connect(audioContext.destination);
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-            osc.start(audioContext.currentTime);
-            osc.stop(audioContext.currentTime + duration);
-          }, delay);
-        };
-        playTone(523, 0, 0.15);    // C
-        playTone(659, 150, 0.15);  // E
-        playTone(784, 300, 0.3);   // G
-      } else if (type === 'timeout') {
-        oscillator.frequency.value = 150;
-        oscillator.type = 'sawtooth';
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.5);
       }
-    };
+    }
 
-    // Check if sequence is correct
-    const checkSequence = (userBlocks, correctSequence) => {
-      if (userBlocks.length !== correctSequence.length) return false;
-      return userBlocks.every((block, index) => block === correctSequence[index]);
-    };
-
-    // Shuffle array function
-    const shuffleArray = (array) => {
-      const shuffled = [...array];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    // Generate stars for background
+    function generateStars() {
+      const starsContainer = document.getElementById('stars');
+      for (let i = 0; i < 50; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 2 + 's';
+        starsContainer.appendChild(star);
       }
-      return shuffled;
-    };
+    }
 
-    // Timer Functions
-    const startTimer = () => {
-      if (gameState.timerInterval) {
-        clearInterval(gameState.timerInterval);
-      }
-      
-      gameState.timerInterval = setInterval(() => {
-        if (!gameState.playerSubmitted && gameState.playerTimeLeft > 0) {
-          gameState.playerTimeLeft--;
-          
-          if (gameState.playerTimeLeft === 0) {
-            handleTimeout();
-          }
-          
-          if (gameState.screen === 'gameplay') {
-            updateTimerDisplay();
-          }
-        }
+    // Initialize map view
+    function initMap() {
+      generateStars();
+      updateMapDisplay();
+    }
+
+    // Update map display based on game state
+    function updateMapDisplay() {
+      for (let i = 1; i <= 5; i++) {
+        const levelBtn = document.getElementById(`level${i}`);
+        const scoreDisplay = document.getElementById(`score${i}`);
         
-        if (gameState.playerSubmitted) {
-          clearInterval(gameState.timerInterval);
-        }
-      }, 1000);
-    };
-
-    const stopTimer = () => {
-      if (gameState.timerInterval) {
-        clearInterval(gameState.timerInterval);
-        gameState.timerInterval = null;
-      }
-    };
-
-    const handleTimeout = () => {
-      playSound('timeout');
-      
-      gameState.playerSubmitted = true;
-      
-      const submitBtn = document.querySelector('.submit-btn');
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = '⏰ Waktu Habis';
-        submitBtn.style.opacity = '0.5';
-      }
-      
-      setTimeout(() => {
-        if (gameState.currentLevel === gameState.maxLevel) {
-          gameState.screen = 'final';
+        if (gameState.unlockedLevels.includes(i)) {
+          levelBtn.classList.remove('locked');
+          levelBtn.disabled = false;
+          
+          if (gameState.scores[i] > 0) {
+            levelBtn.classList.add('completed');
+            scoreDisplay.textContent = `⭐ ${gameState.scores[i]} poin`;
+          } else {
+            levelBtn.classList.remove('completed');
+            scoreDisplay.textContent = 'Belum selesai';
+          }
         } else {
-          gameState.screen = 'levelComplete';
-        }
-        render();
-      }, 2000);
-    };
-
-    const updateTimerDisplay = () => {
-      const timer = document.getElementById('timer');
-      
-      if (timer && !gameState.playerSubmitted) {
-        timer.textContent = `⏱️ ${gameState.playerTimeLeft}s`;
-        if (gameState.playerTimeLeft <= 10) {
-          timer.style.color = '#ef4444';
+          levelBtn.classList.add('locked');
+          levelBtn.disabled = true;
+          scoreDisplay.textContent = '🔒';
         }
       }
-    };
-
-    // Render Functions
-    const renderOpeningScreen = () => {
-      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
-      const baseFontSize = config.font_size || defaultConfig.font_size;
-      const fontFamily = config.font_family || defaultConfig.font_family;
       
-      return `
-        <div class="h-full flex items-center justify-center relative overflow-hidden" style="font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
-          <!-- Background Image -->
-          <img 
-            src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&h=1080&fit=crop&q=80" 
-            alt="Background" 
-            loading="lazy"
-            onerror="this.style.display='none';"
-            class="absolute inset-0 w-full h-full object-cover"
-          />
-          <!-- Dark Overlay -->
-          <div class="absolute inset-0 w-full h-full" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(30, 41, 59, 0.75) 100%);"></div>
-          
-          <div class="text-center fade-in px-8 relative z-10">
-            <div class="mb-8">
-              <svg class="w-32 h-32 mx-auto mb-6 glow-effect" viewBox="0 0 120 120" fill="none">
-                <!-- Monitor/Screen -->
-                <rect x="20" y="30" width="80" height="50" rx="3" stroke="${config.primary_action_color}" stroke-width="3" fill="${config.surface_color}"/>
-                <rect x="25" y="35" width="70" height="40" fill="${config.background_color}"/>
-                
-                <!-- Code Lines -->
-                <line x1="30" y1="42" x2="50" y2="42" stroke="${config.secondary_action_color}" stroke-width="2" stroke-linecap="round"/>
-                <line x1="30" y1="50" x2="70" y2="50" stroke="${config.primary_action_color}" stroke-width="2" stroke-linecap="round"/>
-                <line x1="30" y1="58" x2="55" y2="58" stroke="${config.secondary_action_color}" stroke-width="2" stroke-linecap="round"/>
-                <line x1="30" y1="66" x2="65" y2="66" stroke="${config.primary_action_color}" stroke-width="2" stroke-linecap="round"/>
-                
-                <!-- Monitor Stand -->
-                <rect x="55" y="80" width="10" height="8" fill="${config.primary_action_color}"/>
-                <rect x="45" y="88" width="30" height="3" rx="1.5" fill="${config.primary_action_color}"/>
-                
-                <!-- Programmer Person -->
-                <circle cx="85" cy="95" r="8" fill="${config.secondary_action_color}"/>
-                <path d="M85 103 L85 115" stroke="${config.secondary_action_color}" stroke-width="3" stroke-linecap="round"/>
-                <path d="M85 108 L78 113" stroke="${config.secondary_action_color}" stroke-width="3" stroke-linecap="round"/>
-                <path d="M85 108 L92 113" stroke="${config.secondary_action_color}" stroke-width="3" stroke-linecap="round"/>
-                
-                <!-- Keyboard -->
-                <rect x="20" y="95" width="50" height="8" rx="2" fill="${config.primary_action_color}" opacity="0.7"/>
-                <line x1="25" y1="99" x2="65" y2="99" stroke="${config.background_color}" stroke-width="1"/>
-              </svg>
-            </div>
-                    <p class="mb-12" style="font-size: ${baseFontSize * 1.125}px; color: ${config.text_color}; opacity: 0.8;">
-              ${config.game_subtitle}
-            </p>
-            <button 
-              id="playBtn" 
-              class="pulse-btn px-12 py-4 rounded-full font-bold transition-all"
-              style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize * 1.25}px;"
-            >
-              ${config.play_button_text}
-            </button>
-          </div>
-        </div>
-      `;
-    };
+      // Update total score
+      const totalScore = Object.values(gameState.scores).reduce((a, b) => a + b, 0);
+      document.getElementById('totalScore').textContent = totalScore;
+    }
 
-    const renderPlayerInput = () => {
-      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
-      const baseFontSize = config.font_size || defaultConfig.font_size;
-      const fontFamily = config.font_family || defaultConfig.font_family;
+    // Start a level
+    function startLevel(levelNum) {
+      gameState.currentLevel = levelNum;
+      gameState.currentAttempt = gameState.attempts[levelNum] || 0;
       
-      return `
-        <div class="h-full flex items-center justify-center p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
-          <div class="w-full max-w-md fade-in p-8 rounded-2xl" style="background: ${config.surface_color};">
-            <h2 class="text-center mb-8" style="font-size: ${baseFontSize * 2}px; font-weight: 700; color: ${config.text_color};">
-              Masukkan Nama Pemain
-            </h2>
-            <div>
-                  <input 
-                type="text" 
-                id="playerInput" 
-                class="w-full px-4 py-3 rounded-lg mb-8"
-                style="background: #334155; color: ${config.text_color}; border: 2px solid ${config.primary_action_color}; font-size: ${baseFontSize}px;"
-                placeholder="Masukkan nama pemain"
-                readonly
-              />
-            </div>
-            
-            <div class="flex gap-4">
-              <button 
-                id="backToHomeFromInput" 
-                class="flex-1 px-6 py-4 rounded-lg font-bold transition-all"
-                style="background: ${config.surface_color}; color: ${config.text_color}; font-size: ${baseFontSize}px; border: 2px solid ${config.text_color};"
-              >
-                ← Kembali
-              </button>
-              <button 
-                id="startGameBtn" 
-                class="flex-1 px-6 py-4 rounded-lg font-bold transition-all pulse-btn"
-                style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
-              >
-                Mulai
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    };
+      document.getElementById('mapView').classList.add('hidden');
+      document.getElementById('gameView').classList.remove('hidden');
+      
+      loadLevel(levelNum);
+    }
 
-    const renderIntroduction = () => {
-      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
-      const baseFontSize = config.font_size || defaultConfig.font_size;
-      const fontFamily = config.font_family || defaultConfig.font_family;
+    // Load level content
+    function loadLevel(levelNum) {
+      const level = levels[levelNum];
       
-      return `
-        <div class="h-full overflow-auto p-6" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
-          <div class="max-w-2xl mx-auto fade-in">
-            <div class="p-8 rounded-2xl mb-6" style="background: ${config.surface_color};">
-              <div class="text-center mb-6">
-                <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.primary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
-                  ${gameState.playerName}
-                </div>
-                <h2 class="mb-4" style="font-size: ${baseFontSize * 1.75}px; font-weight: 700; color: ${config.text_color};">
-                  Pengantar Materi
-                </h2>
-              </div>
-              
-              <div class="space-y-6" style="color: ${config.text_color};">
-                <div>
-                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.primary_action_color};">
-                    🧠 Apa itu Algoritma?
-                  </h3>
-                  <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
-                    Algoritma adalah urutan langkah-langkah logis untuk menyelesaikan suatu masalah, seperti resep masakan. Setiap langkah harus berurutan dan jelas.
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.primary_action_color};">
-                    💻 Apa itu <em>Pseudocode</em>?
-                  </h3>
-                  <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
-                    <em style="font-style: italic;">Pseudocode</em> adalah cara menulis algoritma dengan bahasa sederhana yang mudah dipahami manusia, tetapi mengikuti struktur logika pemrograman.
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.25}px; font-weight: 600; color: ${config.primary_action_color};">
-                    🔢 Variabel dan Operasi
-                  </h3>
-                  <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6; margin-bottom: 8px;">
-                    <strong>Variabel</strong> adalah tempat menyimpan data. Contoh: harga = 5000
-                  </p>
-                  <p style="font-size: ${baseFontSize * 0.875}px; line-height: 1.6;">
-                    <strong>Operasi Matematika:</strong> penjumlahan (+), pengurangan (-), perkalian (*), pembagian (/)
-                  </p>
-                </div>
-                
-                <div class="p-4 rounded-lg" style="background: ${config.primary_action_color}; color: white;">
-                  <h3 class="mb-3" style="font-size: ${baseFontSize * 1.125}px; font-weight: 600;">
-                    ✨ Contoh <em style="font-style: italic;">Pseudocode</em>
-                  </h3>
-                  <div class="space-y-2" style="font-size: ${baseFontSize * 0.8125}px; font-family: 'Courier New', monospace;">
-                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Mulai</div>
-                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">harga_buku = 25000</div>
-                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">harga_pensil = 5000</div>
-                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">total = harga_buku + harga_pensil</div>
-                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Tampilkan total</div>
-                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.2);">Selesai</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="flex gap-4 justify-center">
-              <button 
-                id="backToHomeFromIntro" 
-                class="px-8 py-4 rounded-full font-bold transition-all"
-                style="background: ${config.surface_color}; color: ${config.text_color}; font-size: ${baseFontSize}px; border: 2px solid ${config.text_color};"
-              >
-                ← Kembali
-              </button>
-              <button 
-                id="startChallengeBtn" 
-                class="px-8 py-4 rounded-full font-bold transition-all pulse-btn"
-                style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
-              >
-                Mulai Tantangan
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    };
+      document.getElementById('levelTitle').textContent = level.title;
+      document.getElementById('caseDescription').textContent = level.description;
+      document.getElementById('caseObjective').textContent = level.objective;
+      
+      const hintsContainer = document.getElementById('caseHints');
+      hintsContainer.innerHTML = level.hints.map(hint => `<li class="flex items-start gap-2"><span class="text-yellow-400">•</span>${hint}</li>`).join('');
+      
+      document.getElementById('attemptCounter').textContent = `Percobaan: ${gameState.currentAttempt + 1}`;
+      
+      // Generate workspace drop zones
+      generateWorkspace(level);
+      
+      // Generate block palette
+      generateBlockPalette(level);
+      
+      // Reset workspace state
+      workspaceBlocks = [];
+      workspaceInputs = {};
+    }
 
-    const renderLevelMap = () => {
-      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
-      const baseFontSize = config.font_size || defaultConfig.font_size;
-      const fontFamily = config.font_family || defaultConfig.font_family;
+    // Generate workspace drop zones
+    function generateWorkspace(level) {
+      const workspace = document.getElementById('workspace');
+      const numZones = level.solution.length;
       
-      let levelsHTML = '';
-      for (let i = 1; i <= gameState.maxLevel; i++) {
-        const isCompleted = gameState.completedLevels.includes(i);
-        const isLocked = i > 1 && !gameState.completedLevels.includes(i - 1);
-        const isActive = i === gameState.currentLevel;
+      workspace.innerHTML = '';
+      
+      for (let i = 0; i < numZones; i++) {
+        const zone = document.createElement('div');
+        zone.className = 'drop-zone flex items-center justify-center p-3';
+        zone.dataset.index = i;
+        zone.innerHTML = `<span class="text-slate-500 text-sm">Langkah ${i + 1}</span>`;
         
-        let levelClass = 'level-active';
-        let statusText = 'Tersedia';
+        zone.addEventListener('dragover', handleDragOver);
+        zone.addEventListener('dragleave', handleDragLeave);
+        zone.addEventListener('drop', handleDrop);
+        zone.addEventListener('touchmove', handleTouchMove);
+        zone.addEventListener('touchend', handleTouchEnd);
         
-        if (isCompleted) {
-          levelClass = 'level-completed';
-          statusText = '✓ Selesai';
-        } else if (isLocked) {
-          levelClass = 'level-locked';
-          statusText = '🔒 Terkunci';
+        workspace.appendChild(zone);
+      }
+    }
+
+    // Generate block palette
+    function generateBlockPalette(level) {
+      const palette = document.getElementById('blockPalette');
+      palette.innerHTML = '';
+      
+      // Shuffle blocks for added challenge
+      const shuffledBlocks = [...level.blocks].sort(() => Math.random() - 0.5);
+      
+      shuffledBlocks.forEach(block => {
+        const blockEl = createBlockElement(block);
+        palette.appendChild(blockEl);
+      });
+    }
+
+    // Create a block element
+    function createBlockElement(block) {
+      const blockEl = document.createElement('div');
+      blockEl.className = `block-item bg-gradient-to-r ${block.color} rounded-xl p-4 text-white font-medium shadow-lg code-font`;
+      blockEl.draggable = true;
+      blockEl.dataset.blockId = block.id;
+      blockEl.dataset.blockType = block.type;
+      
+      if (block.hasInput) {
+        blockEl.innerHTML = `
+          <span class="mr-2">${block.content}</span>
+          <input type="text" 
+                 class="input-field" 
+                 placeholder="${block.inputPlaceholder}"
+                 data-input-id="${block.id}"
+                 onclick="event.stopPropagation()"
+                 onchange="updateBlockInput('${block.id}', this.value)">
+        `;
+      } else {
+        blockEl.textContent = block.content;
+      }
+      
+      // Drag events
+      blockEl.addEventListener('dragstart', handleDragStart);
+      blockEl.addEventListener('dragend', handleDragEnd);
+      
+      // Touch events for mobile
+      blockEl.addEventListener('touchstart', handleTouchStart);
+      
+      return blockEl;
+    }
+
+    // Update block input value
+    function updateBlockInput(blockId, value) {
+      workspaceInputs[blockId] = value;
+    }
+
+    // Drag and Drop handlers
+    function handleDragStart(e) {
+      draggedBlock = e.target.closest('.block-item');
+      draggedBlock.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', draggedBlock.dataset.blockId);
+    }
+
+    function handleDragEnd(e) {
+      if (draggedBlock) {
+        draggedBlock.classList.remove('dragging');
+        draggedBlock = null;
+      }
+      document.querySelectorAll('.drop-zone').forEach(zone => {
+        zone.classList.remove('drag-over');
+      });
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      const zone = e.currentTarget;
+      zone.classList.remove('drag-over');
+      
+      if (draggedBlock) {
+        placeBlockInZone(draggedBlock, zone);
+        playSound('drop');
+      }
+    }
+
+    // Touch handlers for mobile
+    let touchStartX, touchStartY, touchedBlock, touchClone;
+
+    function handleTouchStart(e) {
+      touchedBlock = e.target.closest('.block-item');
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      
+      // Create visual clone for dragging
+      touchClone = touchedBlock.cloneNode(true);
+      touchClone.style.position = 'fixed';
+      touchClone.style.zIndex = '1000';
+      touchClone.style.opacity = '0.8';
+      touchClone.style.pointerEvents = 'none';
+      touchClone.style.width = touchedBlock.offsetWidth + 'px';
+      document.body.appendChild(touchClone);
+      
+      touchedBlock.classList.add('dragging');
+    }
+
+    function handleTouchMove(e) {
+      if (!touchClone) return;
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+      touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+      
+      // Highlight drop zone under touch
+      document.querySelectorAll('.drop-zone').forEach(zone => {
+        const rect = zone.getBoundingClientRect();
+        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+          zone.classList.add('drag-over');
+        } else {
+          zone.classList.remove('drag-over');
+        }
+      });
+    }
+
+    function handleTouchEnd(e) {
+      if (!touchClone || !touchedBlock) return;
+      
+      const touch = e.changedTouches[0];
+      
+      // Find drop zone under final touch position
+      document.querySelectorAll('.drop-zone').forEach(zone => {
+        const rect = zone.getBoundingClientRect();
+        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+          placeBlockInZone(touchedBlock, zone);
+          playSound('drop');
+        }
+        zone.classList.remove('drag-over');
+      });
+      
+      // Cleanup
+      touchedBlock.classList.remove('dragging');
+      if (touchClone.parentNode) {
+        touchClone.parentNode.removeChild(touchClone);
+      }
+      touchClone = null;
+      touchedBlock = null;
+    }
+
+    // Place block in drop zone
+    function placeBlockInZone(block, zone) {
+      const blockId = block.dataset.blockId;
+      const zoneIndex = parseInt(zone.dataset.index);
+      
+      // Check if block is already in workspace
+      const existingIndex = workspaceBlocks.indexOf(blockId);
+      if (existingIndex !== -1) {
+        // Remove from previous position
+        workspaceBlocks[existingIndex] = null;
+        const prevZone = document.querySelector(`.drop-zone[data-index="${existingIndex}"]`);
+        if (prevZone) {
+          prevZone.innerHTML = `<span class="text-slate-500 text-sm">Langkah ${existingIndex + 1}</span>`;
+          prevZone.classList.remove('has-block');
+        }
+      }
+      
+      // Check if zone already has a block
+      if (workspaceBlocks[zoneIndex]) {
+        // Return existing block to palette
+        returnBlockToPalette(workspaceBlocks[zoneIndex]);
+      }
+      
+      // Place new block
+      workspaceBlocks[zoneIndex] = blockId;
+      
+      // Clone block for workspace
+      const level = levels[gameState.currentLevel];
+      const blockData = level.blocks.find(b => b.id === blockId);
+      const workspaceBlock = createBlockElement(blockData);
+      workspaceBlock.classList.add('workspace-block');
+      workspaceBlock.classList.remove('block-item');
+      workspaceBlock.draggable = false;
+      
+      // Add remove button
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'ml-2 text-white/70 hover:text-white';
+      removeBtn.innerHTML = '✕';
+      removeBtn.onclick = () => removeBlockFromZone(zoneIndex);
+      workspaceBlock.appendChild(removeBtn);
+      
+      // Store block data in workspace for later retrieval
+      zone.dataset.blockId = blockId;
+      
+      zone.innerHTML = '';
+      zone.appendChild(workspaceBlock);
+      zone.classList.add('has-block');
+      
+      // Hide block from palette
+      const paletteBlock = document.querySelector(`#blockPalette .block-item[data-block-id="${blockId}"]`);
+      if (paletteBlock) {
+        paletteBlock.style.display = 'none';
+      }
+    }
+
+    // Remove block from zone
+    function removeBlockFromZone(zoneIndex) {
+      const blockId = workspaceBlocks[zoneIndex];
+      if (!blockId) return;
+      
+      workspaceBlocks[zoneIndex] = null;
+      
+      const zone = document.querySelector(`.drop-zone[data-index="${zoneIndex}"]`);
+      zone.innerHTML = `<span class="text-slate-500 text-sm">Langkah ${zoneIndex + 1}</span>`;
+      zone.classList.remove('has-block');
+      
+      returnBlockToPalette(blockId);
+    }
+
+    // Return block to palette
+    function returnBlockToPalette(blockId) {
+      const paletteBlock = document.querySelector(`#blockPalette .block-item[data-block-id="${blockId}"]`);
+      if (paletteBlock) {
+        paletteBlock.style.display = 'block';
+      }
+    }
+
+    // Reset workspace
+    function resetWorkspace() {
+      workspaceBlocks = [];
+      workspaceInputs = {};
+      loadLevel(gameState.currentLevel);
+    }
+
+    // Check answer
+    function checkAnswer() {
+      const level = levels[gameState.currentLevel];
+      gameState.currentAttempt++;
+      gameState.attempts[gameState.currentLevel] = gameState.currentAttempt;
+      
+      document.getElementById('attemptCounter').textContent = `Percobaan: ${gameState.currentAttempt}`;
+      
+      // Check if all zones are filled
+      const filledBlocks = workspaceBlocks.filter(b => b !== null && b !== undefined);
+      if (filledBlocks.length !== level.solution.length) {
+        showResult(false, 'Semua langkah harus diisi!');
+        return;
+      }
+      
+      // Check order
+      let orderCorrect = true;
+      for (let i = 0; i < level.solution.length; i++) {
+        if (workspaceBlocks[i] !== level.solution[i]) {
+          orderCorrect = false;
+          break;
+        }
+      }
+      
+      if (orderCorrect) {
+        // Calculate score (base score - penalty for attempts)
+        const baseScore = 100;
+        const penalty = Math.max(0, (gameState.currentAttempt - 1) * 10);
+        const score = Math.max(baseScore - penalty, 50);
+        
+        gameState.scores[gameState.currentLevel] = score;
+        
+        // Unlock next level
+        if (gameState.currentLevel < 5 && !gameState.unlockedLevels.includes(gameState.currentLevel + 1)) {
+          gameState.unlockedLevels.push(gameState.currentLevel + 1);
         }
         
-        levelsHTML += `
-          <button 
-            class="level-btn p-6 rounded-xl ${levelClass} ${isLocked ? 'level-locked' : ''} transition-all"
-            data-level="${i}"
-            ${isLocked ? 'disabled' : ''}
-            style="color: ${config.background_color}; font-size: ${baseFontSize}px;"
-          >
-            <div style="font-size: ${baseFontSize * 2}px; font-weight: 800; margin-bottom: 8px;">Level ${i}</div>
-            <div style="font-size: ${baseFontSize * 0.875}px; opacity: 0.9;">${statusText}</div>
+        showResult(true, `Skor: ${score} poin`);
+      } else {
+        showResult(false, 'Periksa kembali urutan dan nilai variabel Anda!');
+      }
+    }
+
+    // Show result modal
+    function showResult(success, message) {
+      const modal = document.getElementById('resultModal');
+      const content = document.getElementById('resultContent');
+      const icon = document.getElementById('resultIcon');
+      const title = document.getElementById('resultTitle');
+      const msg = document.getElementById('resultMessage');
+      const actions = document.getElementById('resultActions');
+      
+      if (success) {
+        playSound('success');
+        createConfetti();
+        icon.textContent = '🎉';
+        title.textContent = 'Selamat!';
+        title.className = 'text-2xl font-bold text-green-400 mb-3';
+        msg.textContent = message;
+        
+        if (gameState.currentLevel < 5) {
+          actions.innerHTML = `
+            <button onclick="closeResultAndContinue()" class="btn-success text-white px-6 py-3 rounded-xl font-semibold transition-all hover:translate-y-[-2px]">
+              Level Berikutnya →
+            </button>
+            <button onclick="closeResultModal()" class="bg-slate-600 hover:bg-slate-500 text-white px-6 py-3 rounded-xl font-semibold transition-all">
+              Kembali ke Peta
+            </button>
+          `;
+        } else {
+          actions.innerHTML = `
+            <button onclick="showFinalResult()" class="btn-success text-white px-6 py-3 rounded-xl font-semibold transition-all hover:translate-y-[-2px]">
+              Lihat Hasil Akhir 🏆
+            </button>
+          `;
+        }
+      } else {
+        playSound('error');
+        icon.textContent = '🤔';
+        title.textContent = 'Coba Lagi!';
+        title.className = 'text-2xl font-bold text-yellow-400 mb-3';
+        msg.textContent = message;
+        
+        actions.innerHTML = `
+          <button onclick="closeResultModal()" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold transition-all hover:translate-y-[-2px]">
+            Coba Lagi
           </button>
         `;
+        
+        // Shake the workspace
+        document.getElementById('workspace').classList.add('shake');
+        setTimeout(() => {
+          document.getElementById('workspace').classList.remove('shake');
+        }, 500);
       }
       
-      return `
-        <div class="h-full overflow-auto p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
-          <!-- Tech Circuit Background -->
-          <svg class="absolute inset-0 w-full h-full" style="z-index: 0; opacity: 0.15; pointer-events: none;" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
-            <!-- Vertical lines -->
-            <line x1="100" y1="0" x2="100" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <line x1="300" y1="0" x2="300" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <line x1="500" y1="0" x2="500" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <line x1="700" y1="0" x2="700" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <line x1="900" y1="0" x2="900" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <line x1="1100" y1="0" x2="1100" y2="800" stroke="${config.primary_action_color}" stroke-width="2"/>
-            
-            <!-- Horizontal lines -->
-            <line x1="0" y1="100" x2="1200" y2="100" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <line x1="0" y1="300" x2="1200" y2="300" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <line x1="0" y1="500" x2="1200" y2="500" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <line x1="0" y1="700" x2="1200" y2="700" stroke="${config.primary_action_color}" stroke-width="2"/>
-            
-            <!-- Circuit nodes -->
-            <circle cx="100" cy="100" r="8" fill="${config.primary_action_color}"/>
-            <circle cx="300" cy="200" r="6" fill="${config.primary_action_color}"/>
-            <circle cx="500" cy="150" r="7" fill="${config.primary_action_color}"/>
-            <circle cx="700" cy="300" r="6" fill="${config.primary_action_color}"/>
-            <circle cx="900" cy="250" r="8" fill="${config.primary_action_color}"/>
-            <circle cx="1100" cy="400" r="7" fill="${config.primary_action_color}"/>
-            
-            <circle cx="150" cy="500" r="6" fill="${config.primary_action_color}"/>
-            <circle cx="450" cy="600" r="7" fill="${config.primary_action_color}"/>
-            <circle cx="750" cy="550" r="6" fill="${config.primary_action_color}"/>
-            <circle cx="950" cy="700" r="8" fill="${config.primary_action_color}"/>
-          </svg>
-          
-          <div class="max-w-6xl mx-auto fade-in relative" style="z-index: 2;">
-            <div class="flex justify-between items-center mb-8">
-              <button 
-                id="backToHomeFromMap" 
-                class="px-6 py-3 rounded-lg font-bold transition-all"
-                style="background: ${config.surface_color}; color: ${config.text_color}; font-size: ${baseFontSize}px; border: 2px solid ${config.text_color};"
-              >
-                ← Halaman Awal
-              </button>
-              <h2 class="text-center" style="font-size: ${baseFontSize * 2.5}px; font-weight: 800; color: ${config.text_color};">
-                Peta Level
-              </h2>
-              <div style="width: 150px;"></div>
-            </div>
-            <div class="grid grid-cols-5 gap-6 mb-8">
-              ${levelsHTML}
-            </div>
-            <div class="text-center p-6 rounded-xl" style="background: ${config.surface_color}; color: ${config.text_color};">
-              <p style="font-size: ${baseFontSize * 1.125}px;">
-                <strong>${gameState.playerName}</strong>
-              </p>
-              <p class="mt-2" style="font-size: ${baseFontSize}px; opacity: 0.8;">
-                Skor: ${gameState.playerScore}
-              </p>
-            </div>
-          </div>
-        </div>
-      `;
-    };
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+      }, 10);
+    }
 
-    const renderGameplay = () => {
-      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
-      const baseFontSize = config.font_size || defaultConfig.font_size;
-      const fontFamily = config.font_family || defaultConfig.font_family;
+    // Close result modal
+    function closeResultModal() {
+      const modal = document.getElementById('resultModal');
+      const content = document.getElementById('resultContent');
       
-      const caseData = gameState.currentCase;
-      const playerBlocks = gameState.playerBlocks;
+      content.classList.remove('scale-100', 'opacity-100');
+      content.classList.add('scale-95', 'opacity-0');
       
-      let availableBlocksHTML = shuffleArray(caseData.availableBlocks).map((block, index) => `
-        <div 
-          class="drag-block p-3 rounded-lg mb-2 cursor-move"
-          style="background: ${config.surface_color}; color: ${config.text_color}; border: 2px solid ${config.primary_action_color}; font-size: ${baseFontSize * 0.875}px;"
-          draggable="true"
-          data-block="${block}"
-        >
-          ${block}
-        </div>
-      `).join('');
-      
-      let constructedBlocksHTML = playerBlocks.map((block, index) => `
-        <div 
-          class="flex items-center justify-between p-3 rounded-lg mb-2"
-          style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize * 0.875}px;"
-          data-index="${index}"
-        >
-          <span>${block}</span>
-          <button 
-            class="delete-block-btn ml-2 px-2 py-1 rounded transition-all"
-            data-index="${index}"
-            style="background: rgba(255,255,255,0.2); color: ${config.background_color}; border: none; cursor: pointer; font-weight: bold; font-size: ${baseFontSize * 0.75}px;"
-          >
-            ✕
-          </button>
-        </div>
-      `).join('');
-      
-      return `
-        <div class="h-full overflow-auto p-6" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
-          <!-- Code Editor Background SVG -->
-          <svg class="absolute inset-0 w-full h-full" style="z-index: 0; opacity: 0.08; pointer-events: none;" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice">
-            <!-- Left sidebar -->
-            <rect x="0" y="0" width="200" height="900" fill="none" stroke="${config.primary_action_color}" stroke-width="1"/>
-            <!-- File icons -->
-            <rect x="20" y="30" width="160" height="30" rx="4" fill="none" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <rect x="20" y="75" width="160" height="30" rx="4" fill="none" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.6"/>
-            <rect x="20" y="120" width="160" height="30" rx="4" fill="none" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.4"/>
-            
-            <!-- Main editor area with code lines -->
-            <line x1="220" y1="0" x2="220" y2="900" stroke="${config.primary_action_color}" stroke-width="2"/>
-            <!-- Code line numbers -->
-            <text x="230" y="50" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">1</text>
-            <text x="230" y="80" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">2</text>
-            <text x="230" y="110" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">3</text>
-            <text x="230" y="140" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">4</text>
-            <text x="230" y="170" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">5</text>
-            <text x="230" y="200" font-family="monospace" font-size="14" fill="${config.primary_action_color}" opacity="0.5">6</text>
-            
-            <!-- Code structure -->
-            <line x1="270" y1="40" x2="600" y2="40" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.4"/>
-            <line x1="270" y1="75" x2="650" y2="75" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.5"/>
-            <line x1="270" y1="110" x2="700" y2="110" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.4"/>
-            <line x1="270" y1="145" x2="550" y2="145" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.5"/>
-            <line x1="270" y1="180" x2="620" y2="180" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.4"/>
-            <line x1="270" y1="215" x2="680" y2="215" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.5"/>
-            
-            <!-- Bracket pairs -->
-            <path d="M 250 250 L 260 250 L 260 350 L 250 350" stroke="${config.primary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
-            <path d="M 1150 250 L 1140 250 L 1140 350 L 1150 350" stroke="${config.primary_action_color}" stroke-width="2" fill="none" opacity="0.3"/>
-            
-            <!-- Terminal section -->
-            <line x1="0" y1="500" x2="1200" y2="500" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.3"/>
-            <text x="20" y="530" font-family="monospace" font-size="12" fill="${config.primary_action_color}" opacity="0.4">$ Terminal</text>
-            <line x1="20" y1="545" x2="1180" y2="545" stroke="${config.primary_action_color}" stroke-width="1" opacity="0.2" stroke-dasharray="5,5"/>
-            
-            <!-- Status bar -->
-            <line x1="0" y1="870" x2="1200" y2="870" stroke="${config.primary_action_color}" stroke-width="2" opacity="0.3"/>
-            <text x="20" y="890" font-family="monospace" font-size="11" fill="${config.primary_action_color}" opacity="0.4">Line 6, Column 24</text>
-          </svg>
-          
-          <div class="max-w-4xl mx-auto fade-in relative" style="z-index: 2;">
-            <div class="mb-4 p-4 rounded-lg text-center" style="background: ${config.primary_action_color}; color: ${config.background_color};">
-              <h3 style="font-size: ${baseFontSize * 1.5}px; font-weight: 700;">${gameState.playerName}</h3>
-              <div id="timer" class="mt-2" style="font-size: ${baseFontSize * 1.125}px; font-weight: 600;">
-                ⏱️ ${gameState.playerTimeLeft}s
-              </div>
-            </div>
-            
-            <div class="mb-4 p-4 rounded-lg" style="background: ${config.surface_color}; color: ${config.text_color};">
-              <h4 style="font-size: ${baseFontSize * 1.125}px; font-weight: 600; margin-bottom: 8px;">${caseData.title}</h4>
-              <p style="font-size: ${baseFontSize * 0.875}px; opacity: 0.9;">${caseData.description}</p>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <h4 class="mb-2" style="font-size: ${baseFontSize}px; font-weight: 600; color: ${config.text_color};">
-                  Blok Tersedia:
-                </h4>
-                <div class="available-blocks" style="max-height: 400px; overflow-y: auto;">
-                  ${availableBlocksHTML}
-                </div>
-              </div>
-              
-              <div>
-                <h4 class="mb-2" style="font-size: ${baseFontSize}px; font-weight: 600; color: ${config.text_color};">
-                  <em style="font-style: italic;">Pseudocode</em> Kamu:
-                </h4>
-                <div 
-                  class="drop-zone constructed-blocks p-4"
-                  style="background: ${config.surface_color}; min-height: 400px;"
-                >
-                  ${constructedBlocksHTML.length > 0 ? constructedBlocksHTML : `<p style="color: ${config.text_color}; opacity: 0.5; font-size: ${baseFontSize * 0.875}px;">Seret blok ke sini...</p>`}
-                </div>
-              </div>
-            </div>
-            
-            <div class="mt-6 flex gap-2">
-              <button 
-                class="reset-btn flex-1 py-3 rounded-lg font-bold transition-all"
-                style="background: ${config.surface_color}; color: ${config.text_color}; border: 2px solid ${config.primary_action_color}; font-size: ${baseFontSize}px;"
-              >
-                Reset
-              </button>
-              <button 
-                class="submit-btn flex-1 py-3 rounded-lg font-bold transition-all"
-                style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
-              >
-                Selesai
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    };
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }, 200);
+    }
 
-    const renderLevelComplete = () => {
-      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
-      const baseFontSize = config.font_size || defaultConfig.font_size;
-      const fontFamily = config.font_family || defaultConfig.font_family;
+    // Close result and continue to next level
+    function closeResultAndContinue() {
+      const modal = document.getElementById('resultModal');
+      const content = document.getElementById('resultContent');
       
-      const isLastLevel = gameState.currentLevel === gameState.maxLevel;
+      content.classList.remove('scale-100', 'opacity-100');
+      content.classList.add('scale-95', 'opacity-0');
       
-      return `
-        <div class="h-full flex items-center justify-center p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
-          <div class="w-full max-w-lg fade-in p-8 rounded-2xl text-center" style="background: ${config.surface_color};">
-            <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.primary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
-              ${gameState.playerName}
-            </div>
-            <div class="text-6xl mb-6">${gameState.playerResult === 'correct' ? '��' : '😔'}</div>
-            <h2 class="mb-6" style="font-size: ${baseFontSize * 1.75}px; font-weight: 700; color: ${config.text_color};">
-              Level ${gameState.currentLevel} Selesai!
-            </h2>
-            
-            <div class="mb-6">
-              <div class="p-6 rounded-lg" style="background: ${config.primary_action_color}; color: white;">
-                <p style="font-size: ${baseFontSize * 0.875}px; margin-bottom: 4px;">Skor Kamu</p>
-                <p style="font-size: ${baseFontSize * 2.5}px; font-weight: 800;">
-                  ${gameState.playerScore}
-                </p>
-                <p style="font-size: ${baseFontSize * 0.875}px; margin-top: 4px; opacity: 0.9;">poin</p>
-              </div>
-            </div>
-            
-            <div class="p-4 rounded-lg mb-4" style="background: ${gameState.playerResult === 'correct' ? '#059669' : '#dc2626'}; color: white;">
-              <p style="font-size: ${baseFontSize}px; font-weight: 600; margin-bottom: 8px;">
-                ${gameState.playerResult === 'correct' ? '✓ Jawaban Benar!' : '✗ Jawaban Salah'}
-              </p>
-              <p style="font-size: ${baseFontSize * 0.875}px; opacity: 0.95;">
-                ${gameState.playerResult === 'correct' 
-                  ? 'Hebat! Kamu berhasil menyusun pseudocode dengan tepat. Algoritma yang kamu buat sudah benar dan logis!' 
-                  : 'Jangan menyerah! Coba perhatikan lagi urutan langkah-langkahnya. Setiap blok harus disusun secara logis dan berurutan.'}
-              </p>
-            </div>
-            
-            <div class="flex gap-4">
-              ${!isLastLevel ? `
-                <button 
-                  id="nextLevelBtn" 
-                  class="flex-1 px-6 py-4 rounded-lg font-bold transition-all"
-                  style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
-                >
-                  ${config.next_level_text}
-                </button>
-              ` : ''}
-              
-              <button 
-                id="backToMapBtn" 
-                class="flex-1 px-6 py-4 rounded-lg font-bold transition-all"
-                style="background: ${config.surface_color}; color: ${config.text_color}; font-size: ${baseFontSize}px; border: 2px solid ${config.text_color};"
-              >
-                Kembali ke Peta
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    };
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        startLevel(gameState.currentLevel + 1);
+      }, 200);
+    }
 
-    const renderFinalScreen = () => {
-      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
-      const baseFontSize = config.font_size || defaultConfig.font_size;
-      const fontFamily = config.font_family || defaultConfig.font_family;
+    // Show final result
+    function showFinalResult() {
+      const resultModal = document.getElementById('resultModal');
+      resultModal.classList.add('hidden');
+      resultModal.classList.remove('flex');
       
-      return `
-        <div class="h-full flex items-center justify-center p-8" style="background: ${config.background_color}; font-family: ${fontFamily}, system-ui, sans-serif; position: relative; z-index: 1;">
-          <div class="w-full max-w-lg fade-in p-8 rounded-2xl text-center" style="background: ${config.surface_color};">
-            <div class="inline-block px-4 py-2 rounded-full mb-4" style="background: ${config.primary_action_color}; color: white; font-size: ${baseFontSize}px; font-weight: 600;">
-              ${gameState.playerName}
-            </div>
-            
-            <div class="text-6xl mb-6">🏆</div>
-            
-            <h2 class="mb-6" style="font-size: ${baseFontSize * 2}px; font-weight: 800; color: ${config.text_color};">
-              Permainan Selesai!
-            </h2>
-            
-            <div class="mb-8 p-6 rounded-xl" style="background: ${config.primary_action_color}; color: white;">
-              <p style="font-size: ${baseFontSize}px; margin-bottom: 8px; opacity: 0.9;">Total Skor Final</p>
-              <p style="font-size: ${baseFontSize * 3}px; font-weight: 800;">
-                ${gameState.playerScore}
-              </p>
-              <p style="font-size: ${baseFontSize}px; margin-top: 8px; opacity: 0.9;">poin</p>
-            </div>
-            
-            <p style="font-size: ${baseFontSize}px; color: ${config.text_color}; font-weight: 600; margin-bottom: 8px;">
-              Kamu telah menyelesaikan semua level! 🎊
-            </p>
-            <p style="font-size: ${baseFontSize * 0.875}px; color: ${config.text_color}; opacity: 0.8; margin-bottom: 8px;">
-              Selamat! Kamu sudah belajar tentang algoritma dan pseudocode. Terus berlatih untuk menjadi ahli!
-            </p>
-            
-            <div class="flex gap-4">
-              <button 
-                id="newGameBtn" 
-                class="flex-1 px-6 py-4 rounded-lg font-bold transition-all"
-                style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize}px;"
-              >
-                Permainan Baru
-              </button>
-              <button 
-                id="backToMapFinalBtn" 
-                class="flex-1 px-6 py-4 rounded-lg font-bold transition-all"
-                style="background: ${config.surface_color}; color: ${config.text_color}; font-size: ${baseFontSize}px; border: 2px solid ${config.text_color};"
-              >
-                Kembali ke Peta
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    };
-
-    // Drag and Drop Handlers
-    let draggedElement = null;
-    let draggedBlock = null;
-
-    const setupDragAndDrop = () => {
-      // Remove old listeners if they exist
-      const oldDragStart = document._dragStartHandler;
-      const oldDragEnd = document._dragEndHandler;
-      const oldDragOver = document._dragOverHandler;
-      const oldDragLeave = document._dragLeaveHandler;
-      const oldDrop = document._dropHandler;
+      const modal = document.getElementById('finalModal');
+      const content = document.getElementById('finalContent');
       
-      if (oldDragStart) document.removeEventListener('dragstart', oldDragStart);
-      if (oldDragEnd) document.removeEventListener('dragend', oldDragEnd);
-      if (oldDragOver) document.removeEventListener('dragover', oldDragOver);
-      if (oldDragLeave) document.removeEventListener('dragleave', oldDragLeave);
-      if (oldDrop) document.removeEventListener('drop', oldDrop);
+      const totalScore = Object.values(gameState.scores).reduce((a, b) => a + b, 0);
+      const totalAttempts = Object.values(gameState.attempts).reduce((a, b) => a + b, 0);
       
-      const dragStartHandler = (e) => {
-        if (e.target.classList.contains('drag-block')) {
-          draggedElement = e.target;
-          draggedBlock = e.target.dataset.block;
-          e.target.style.opacity = '0.5';
-          playSound('click');
-        }
-      };
-
-      const dragEndHandler = (e) => {
-        if (e.target.classList.contains('drag-block')) {
-          e.target.style.opacity = '1';
-          draggedElement = null;
-          draggedBlock = null;
-        }
-      };
-
-      const dragOverHandler = (e) => {
-        e.preventDefault();
-        if (e.target.classList.contains('drop-zone') || e.target.closest('.drop-zone')) {
-          const dropZone = e.target.classList.contains('drop-zone') ? e.target : e.target.closest('.drop-zone');
-          dropZone.classList.add('drag-over');
-        }
-      };
-
-      const dragLeaveHandler = (e) => {
-        if (e.target.classList.contains('drop-zone')) {
-          e.target.classList.remove('drag-over');
-        }
-      };
-
-      const dropHandler = (e) => {
-        e.preventDefault();
-        const dropZone = e.target.classList.contains('drop-zone') ? e.target : e.target.closest('.drop-zone');
-        
-        if (dropZone && draggedBlock) {
-          gameState.playerBlocks.push(draggedBlock);
-          
-          dropZone.classList.remove('drag-over');
-          playSound('click');
-          
-          // Clear dragged state immediately
-          draggedElement = null;
-          draggedBlock = null;
-          
-          updateGameplay();
-        }
-      };
+      document.getElementById('finalScore').textContent = totalScore;
+      document.getElementById('finalAttempts').textContent = totalAttempts;
       
-      document.addEventListener('dragstart', dragStartHandler);
-      document.addEventListener('dragend', dragEndHandler);
-      document.addEventListener('dragover', dragOverHandler);
-      document.addEventListener('dragleave', dragLeaveHandler);
-      document.addEventListener('drop', dropHandler);
+      // Performance summary
+      const summary = document.getElementById('performanceSummary');
+      summary.innerHTML = '';
       
-      // Store references for cleanup
-      document._dragStartHandler = dragStartHandler;
-      document._dragEndHandler = dragEndHandler;
-      document._dragOverHandler = dragOverHandler;
-      document._dragLeaveHandler = dragLeaveHandler;
-      document._dropHandler = dropHandler;
-    };
-
-    // Event Handlers
-    const setupEventHandlers = () => {
-      const app = document.getElementById('app');
-      
-      // Handle input focus to open keypad
-      app.addEventListener('click', (e) => {
-        if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
-          openKeypad(e.target);
-        }
-      });
-      
-      app.addEventListener('click', async (e) => {
-        if (e.target.id === 'playBtn') {
-          playSound('click');
-          gameState.screen = 'playerInput';
-          render();
-        }
-        
-        if (e.target.id === 'backToHomeFromInput') {
-          playSound('click');
-          gameState.screen = 'opening';
-          render();
-        }
-        
-        if (e.target.id === 'backToHomeFromIntro') {
-          playSound('click');
-          gameState.screen = 'opening';
-          render();
-        }
-        
-        if (e.target.id === 'backToHomeFromMap') {
-          stopTimer();
-          playSound('click');
-          gameState.screen = 'opening';
-          render();
-        }
-        
-        if (e.target.id === 'startGameBtn') {
-          const player = document.getElementById('playerInput').value.trim();
-          
-          if (player) {
-            gameState.playerName = player;
-            gameState.screen = 'introduction';
-            playSound('click');
-            render();
-          } else {
-            const messageEl = document.createElement('p');
-            messageEl.textContent = 'Mohon isi nama pemain!';
-            messageEl.className = 'text-center mt-4';
-            messageEl.style.color = '#ef4444';
-            messageEl.style.fontSize = '14px';
-            e.target.parentElement.appendChild(messageEl);
-            setTimeout(() => messageEl.remove(), 2000);
-          }
-        }
-        
-        if (e.target.id === 'startChallengeBtn') {
-          playSound('click');
-          gameState.screen = 'levelMap';
-          render();
-        }
-        
-        if (e.target.classList.contains('level-btn') && !e.target.disabled) {
-          const level = parseInt(e.target.dataset.level);
-          playSound('click');
-          
-          // Set state immediately
-          gameState.currentLevel = level;
-          gameState.currentCase = levelCases[level][Math.floor(Math.random() * 2)];
-          gameState.playerBlocks = [];
-          gameState.playerSubmitted = false;
-          gameState.playerTimeLeft = 60;
-          gameState.playerResult = '';
-          gameState.screen = 'gameplay';
-          
-          // Render immediately without delay
-          render();
-          
-          // Setup drag and drop after render
-          setTimeout(() => {
-            setupDragAndDrop();
-            startTimer();
-          }, 0);
-        }
-        
-        if (e.target.classList.contains('reset-btn')) {
-          gameState.playerBlocks = [];
-          playSound('click');
-          updateGameplay();
-        }
-        
-        if (e.target.classList.contains('delete-block-btn')) {
-          const index = parseInt(e.target.dataset.index);
-          if (index >= 0 && index < gameState.playerBlocks.length) {
-            gameState.playerBlocks.splice(index, 1);
-            playSound('click');
-            updateGameplay();
-          }
-        }
-        
-        if (e.target.classList.contains('submit-btn')) {
-          if (gameState.playerSubmitted) {
-            return;
-          }
-          
-          const userBlocks = gameState.playerBlocks;
-          const correctSequence = gameState.currentCase.correctSequence;
-          
-          const isCorrect = checkSequence(userBlocks, correctSequence);
-          
-          gameState.playerSubmitted = true;
-          gameState.playerResult = isCorrect ? 'correct' : 'incorrect';
-          if (isCorrect) {
-            gameState.playerScore += 100;
-            const timeBonus = gameState.playerTimeLeft * 2;
-            gameState.playerScore += timeBonus;
-          }
-          
-          if (isCorrect) {
-            playSound('success');
-          } else {
-            playSound('error');
-          }
-          
-          e.target.disabled = true;
-          e.target.textContent = isCorrect ? '✓ Benar!' : '✗ Salah';
-          e.target.style.opacity = '0.7';
-          
-          // Update UI immediately
-          updateGameplay();
-          
-          // Save data and move to next screen
-          if (window.dataSdk) {
-            if (!gameState.completedLevels.includes(gameState.currentLevel)) {
-              gameState.completedLevels.push(gameState.currentLevel);
-            }
-            
-            gameState.sessionId = gameState.sessionId || `session_${Date.now()}`;
-            
-            const result = await window.dataSdk.create({
-              player_name: gameState.playerName,
-              current_level: gameState.currentLevel,
-              player_score: gameState.playerScore,
-              completed_levels: gameState.completedLevels.join(','),
-              session_id: gameState.sessionId,
-              timestamp: new Date().toISOString()
-            });
-            
-            if (!result.isOk) {
-              console.error('Failed to save data');
-            }
-          }
-          
-          // Play victory sound after data is saved
-          playSound('complete');
-          
-          stopTimer();
-          
-          setTimeout(() => {
-            if (gameState.currentLevel === gameState.maxLevel) {
-              gameState.screen = 'final';
-            } else {
-              gameState.screen = 'levelComplete';
-            }
-            render();
-          }, 1500);
-        }
-        
-        if (e.target.id === 'nextLevelBtn') {
-          playSound('click');
-          
-          // Set state immediately
-          gameState.currentLevel++;
-          gameState.currentCase = levelCases[gameState.currentLevel][Math.floor(Math.random() * 2)];
-          gameState.playerBlocks = [];
-          gameState.playerSubmitted = false;
-          gameState.playerTimeLeft = 60;
-          gameState.playerResult = '';
-          gameState.screen = 'gameplay';
-          
-          // Render immediately
-          render();
-          
-          // Setup after render
-          setTimeout(() => {
-            setupDragAndDrop();
-            startTimer();
-          }, 0);
-        }
-        
-        if (e.target.id === 'backToMapBtn' || e.target.id === 'backToMapFinalBtn') {
-          stopTimer();
-          gameState.screen = 'levelMap';
-          playSound('click');
-          render();
-        }
-        
-        if (e.target.id === 'newGameBtn') {
-          stopTimer();
-          gameState = {
-            screen: 'playerInput',
-            playerName: '',
-            currentLevel: 1,
-            maxLevel: 5,
-            playerScore: 0,
-            playerBlocks: [],
-            completedLevels: [],
-            sessionId: '',
-            currentCase: null,
-            playerSubmitted: false,
-            playerTimeLeft: 60,
-            timerInterval: null,
-            playerResult: ''
-          };
-          playSound('click');
-          render();
-        }
-      });
-    };
-
-    const updateGameplay = () => {
-      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
-      const baseFontSize = config.font_size || defaultConfig.font_size;
-      
-      const playerBlocks = gameState.playerBlocks;
-      const constructedContainer = document.querySelector('.constructed-blocks');
-      
-      if (constructedContainer) {
-        if (playerBlocks.length === 0) {
-          constructedContainer.innerHTML = `<p style="color: ${config.text_color}; opacity: 0.5; font-size: ${baseFontSize * 0.875}px;">Seret blok ke sini...</p>`;
-        } else {
-          constructedContainer.innerHTML = playerBlocks.map((block, index) => `
-            <div 
-              class="flex items-center justify-between p-3 rounded-lg mb-2"
-              style="background: ${config.primary_action_color}; color: ${config.background_color}; font-size: ${baseFontSize * 0.875}px;"
-              data-index="${index}"
-            >
-              <span>${block}</span>
-              <button 
-                class="delete-block-btn ml-2 px-2 py-1 rounded transition-all"
-                data-index="${index}"
-                style="background: rgba(255,255,255,0.2); color: ${config.background_color}; border: none; cursor: pointer; font-weight: bold; font-size: ${baseFontSize * 0.75}px;"
-              >
-                ✕
-              </button>
-            </div>
-          `).join('');
-        }
+      for (let i = 1; i <= 5; i++) {
+        const levelResult = document.createElement('div');
+        levelResult.className = 'flex justify-between';
+        levelResult.innerHTML = `
+          <span>Level ${i}:</span>
+          <span class="${gameState.scores[i] >= 80 ? 'text-green-400' : gameState.scores[i] >= 60 ? 'text-yellow-400' : 'text-orange-400'}">
+            ${gameState.scores[i]} poin (${gameState.attempts[i]} percobaan)
+          </span>
+        `;
+        summary.appendChild(levelResult);
       }
-    };
-
-    const render = () => {
-      const app = document.getElementById('app');
       
-      switch (gameState.screen) {
-        case 'opening':
-          app.innerHTML = renderOpeningScreen();
-          break;
-        case 'playerInput':
-          app.innerHTML = renderPlayerInput();
-          break;
-        case 'introduction':
-          app.innerHTML = renderIntroduction();
-          break;
-        case 'levelMap':
-          app.innerHTML = renderLevelMap();
-          break;
-        case 'gameplay':
-          app.innerHTML = renderGameplay();
-          break;
-        case 'levelComplete':
-          app.innerHTML = renderLevelComplete();
-          break;
-        case 'final':
-          app.innerHTML = renderFinalScreen();
-          break;
+      // Overall assessment
+      const assessment = document.createElement('div');
+      assessment.className = 'mt-3 pt-3 border-t border-slate-600';
+      let assessmentText = '';
+      if (totalScore >= 450) {
+        assessmentText = '⭐ Luar Biasa! Pemahaman algoritma sangat baik!';
+      } else if (totalScore >= 350) {
+        assessmentText = '👍 Bagus! Terus berlatih untuk hasil lebih baik!';
+      } else {
+        assessmentText = '💪 Terus semangat! Latihan membuat sempurna!';
       }
-    };
+      assessment.innerHTML = `<span class="text-slate-400">Penilaian:</span> <span class="font-medium">${assessmentText}</span>`;
+      summary.appendChild(assessment);
+      
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+      }, 10);
+      
+      createConfetti();
+    }
 
-    // Data SDK Handler
-    const dataHandler = {
-      onDataChanged(data) {
-        // Data is stored for tracking purposes, no UI updates needed here
+    // Close final modal
+    function closeFinalModal() {
+      const modal = document.getElementById('finalModal');
+      const content = document.getElementById('finalContent');
+      
+      content.classList.remove('scale-100', 'opacity-100');
+      content.classList.add('scale-95', 'opacity-0');
+      
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        backToMap();
+      }, 200);
+    }
+
+    // Reset game
+    function resetGame() {
+      gameState = {
+        currentLevel: 0,
+        unlockedLevels: [1],
+        scores: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        attempts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        currentAttempt: 0
+      };
+      
+      closeFinalModal();
+      updateMapDisplay();
+    }
+
+    // Back to map
+    function backToMap() {
+      document.getElementById('gameView').classList.add('hidden');
+      document.getElementById('mapView').classList.remove('hidden');
+      updateMapDisplay();
+    }
+
+    // Create confetti effect
+    function createConfetti() {
+      const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+      
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.width = Math.random() * 10 + 5 + 'px';
+        confetti.style.height = confetti.style.width;
+        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        
+        document.body.appendChild(confetti);
+        
+        setTimeout(() => {
+          confetti.remove();
+        }, 2500);
       }
-    };
+    }
 
-    // Element SDK Implementation
-    const onConfigChange = async (config) => {
-      const baseFontSize = config.font_size || defaultConfig.font_size;
-      const fontFamily = config.font_family || defaultConfig.font_family;
-      
-      document.body.style.fontFamily = `${fontFamily}, system-ui, sans-serif`;
-      
-      const titleElements = document.querySelectorAll('h1, h2');
-      titleElements.forEach(el => {
-        if (el.tagName === 'H1') {
-          el.style.fontSize = `${baseFontSize * 2.5}px`;
-        } else {
-          el.style.fontSize = `${baseFontSize * 2}px`;
-        }
-        el.style.color = config.text_color || defaultConfig.text_color;
-      });
-      
-      const backgrounds = document.querySelectorAll('[style*="background"]');
-      backgrounds.forEach(el => {
-        const currentBg = el.style.background;
-        if (currentBg.includes(defaultConfig.background_color)) {
-          el.style.background = currentBg.replace(defaultConfig.background_color, config.background_color || defaultConfig.background_color);
-        }
-        if (currentBg.includes(defaultConfig.surface_color)) {
-          el.style.background = currentBg.replace(defaultConfig.surface_color, config.surface_color || defaultConfig.surface_color);
-        }
-      });
-      
-      const buttons = document.querySelectorAll('button');
-      buttons.forEach(btn => {
-        if (btn.id === 'playBtn' || btn.classList.contains('submit-btn')) {
-          btn.style.background = config.primary_action_color || defaultConfig.primary_action_color;
-        }
-      });
-    };
+    // Element SDK Integration
+    async function onConfigChange(config) {
+      const title = config.game_title || defaultConfig.game_title;
+      document.getElementById('gameTitle').textContent = `🏆 ${title}`;
+    }
 
-    const mapToCapabilities = (config) => ({
-      recolorables: [
-        {
-          get: () => config.background_color || defaultConfig.background_color,
-          set: (value) => {
-            if (window.elementSdk && window.elementSdk.config) {
-              window.elementSdk.config.background_color = value;
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
               window.elementSdk.setConfig({ background_color: value });
             }
-          }
-        },
-        {
-          get: () => config.surface_color || defaultConfig.surface_color,
-          set: (value) => {
-            if (window.elementSdk && window.elementSdk.config) {
-              window.elementSdk.config.surface_color = value;
+          },
+          {
+            get: () => config.surface_color || defaultConfig.surface_color,
+            set: (value) => {
+              config.surface_color = value;
               window.elementSdk.setConfig({ surface_color: value });
             }
-          }
-        },
-        {
-          get: () => config.text_color || defaultConfig.text_color,
-          set: (value) => {
-            if (window.elementSdk && window.elementSdk.config) {
-              window.elementSdk.config.text_color = value;
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
               window.elementSdk.setConfig({ text_color: value });
             }
-          }
-        },
-        {
-          get: () => config.primary_action_color || defaultConfig.primary_action_color,
-          set: (value) => {
-            if (window.elementSdk && window.elementSdk.config) {
-              window.elementSdk.config.primary_action_color = value;
-              window.elementSdk.setConfig({ primary_action_color: value });
+          },
+          {
+            get: () => config.primary_color || defaultConfig.primary_color,
+            set: (value) => {
+              config.primary_color = value;
+              window.elementSdk.setConfig({ primary_color: value });
+            }
+          },
+          {
+            get: () => config.secondary_color || defaultConfig.secondary_color,
+            set: (value) => {
+              config.secondary_color = value;
+              window.elementSdk.setConfig({ secondary_color: value });
             }
           }
-        },
-        {
-          get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
           set: (value) => {
-            if (window.elementSdk && window.elementSdk.config) {
-              window.elementSdk.config.secondary_action_color = value;
-              window.elementSdk.setConfig({ secondary_action_color: value });
-            }
-          }
-        }
-      ],
-      borderables: [],
-      fontEditable: {
-        get: () => config.font_family || defaultConfig.font_family,
-        set: (value) => {
-          if (window.elementSdk && window.elementSdk.config) {
-            window.elementSdk.config.font_family = value;
+            config.font_family = value;
             window.elementSdk.setConfig({ font_family: value });
           }
-        }
-      },
-      fontSizeable: {
-        get: () => config.font_size || defaultConfig.font_size,
-        set: (value) => {
-          if (window.elementSdk && window.elementSdk.config) {
-            window.elementSdk.config.font_size = value;
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (value) => {
+            config.font_size = value;
             window.elementSdk.setConfig({ font_size: value });
           }
         }
-      }
-    });
+      };
+    }
 
-    const mapToEditPanelValues = (config) => new Map([
-      ["game_title", config.game_title || defaultConfig.game_title],
-      ["game_subtitle", config.game_subtitle || defaultConfig.game_subtitle],
-      ["play_button_text", config.play_button_text || defaultConfig.play_button_text],
-      ["next_level_text", config.next_level_text || defaultConfig.next_level_text]
-    ]);
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ["game_title", config.game_title || defaultConfig.game_title]
+      ]);
+    }
 
     // Initialize
-    const init = async () => {
-      if (window.dataSdk) {
-        await window.dataSdk.init(dataHandler);
-      }
-      
-      if (window.elementSdk) {
-        window.elementSdk.init({
-          defaultConfig,
-          onConfigChange,
-          mapToCapabilities,
-          mapToEditPanelValues
-        });
-      }
-      
-      render();
-      setupEventHandlers();
-      setupKeypadListeners();
-    };
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
 
-    init();
+    initMap();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cb7cb7684fde9cc',t:'MTc3MDY4NjUzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2bc09ac2dae9cf',t:'MTc3MTkwMjQ0My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
